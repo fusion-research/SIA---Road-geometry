@@ -47,19 +47,20 @@ IR = filter2(w, IR);
 
 
 % Find white lines
-IB_thres = IB > .65;
-IR_thres = IR > .8;
-IG_thres = IG > .8;
+IB_thres = IB > .75;
+IR_thres = IR > .85;
+IG_thres = IG > .85;
 figure(4)
 subplot(1,2,1)
 imshow(IB_thres)
-title('Threshold for blue image')
+title('Threshold for red image')
 
-I_best = IB_thres-IR_thres-IG_thres;
+I_best = IB_thres+IR_thres+IG_thres+IS;
+I_best = I_best > 3;
 
 subplot(1,2,2)
 imshow(I_best)
-title('Threshold for red image')
+title('Best image')
 
 
 
@@ -103,3 +104,32 @@ title('Not filled')
 subplot(1,2,2)
 imshow(I_filled)
 title('Filled')
+
+%% RGB to HSV
+
+Ihsv = rgb2hsv(I);
+
+rate = size(Ihsv,2)/size(Ihsv,1);
+Ihsv = resample(Ihsv, rate);
+%Ihsv = im2double(Ihsv);
+
+imshow(Ihsv)
+
+IH =Ir(:,1:length(Ir)/3);
+IS =Ir(:, length(Ir)/3+1 : 2*length(Ir)/3);
+IV =Ir(:, 2*length(Ir)/3+1 : length(Ir));
+
+imshow(IS);
+%%
+
+IH_threshold = getThreshold(IH,0.8)
+IS_threshold = getThreshold(IS,0.75)
+IV_threshold = getThreshold(IV,0.8)
+
+IH = IH > 0.2;
+IS = IS > IS_threshold;
+IV = IV > 0.7;
+
+imshow(IS);
+
+%imhist(Ihsv(:,:,3))
