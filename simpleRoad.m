@@ -6,94 +6,97 @@ I = imread('Bild4.png');
 % Show original image
 figure(1)
 imshow(I)
+title('Original image')
 
-% Resample image
-rate = size(I,2)/size(I,1);
-Ir=resample(I,rate);
+% Cut the image
+IR=im2double(cutImage(I(:,:,1)));
+IG=im2double(cutImage(I(:,:,2)));
+IB=im2double(cutImage(I(:,:,3)));
 
+% Threshold for the RGB-images
+IR_thres = IR > getThreshold(IR, 0.5);
+IG_thres = IG > getThreshold(IR, 0.5);
+IB_thres = IB > getThreshold(IR, 0.5);
 
-% Create 3 RGB images
-IR =Ir(:,1:length(Ir)/3);
-IG =Ir(:, length(Ir)/3+1 : 2*length(Ir)/3);
-IB =Ir(:, 2*length(Ir)/3+1 : length(Ir));
+% Convert I to a hsv-image and threshold the saturated image
+Ihsv = rgb2hsv(I);
+IS = cutImage(Ihsv(:,:,2));
+IS_threshold = getThreshold(IS,0.3)
+IS = IS < IS_threshold; % Good pic to extract the road from!
 
-% Show 3 RGB images
-figure(2)
-imshow(Ir)
-title('Resampled RBG images')
-
-% Convert to gray-scale
-Ig = rgb2gray(I);
-
-% Threshold
-IB(IB > 0.95) = 0;
-
-% Show blue image
-figure(3)
-subplot(1,2,1)
-imshow(IB)
-title('Blue image')
-
-% Linear filter on blue image
-w = [1 1 1; 1 1 1; 1 1 1]/9;
-IB = filter2(w, IB);
-subplot(1,2,2)
-imshow(IB)
-title('Linear filter on blue image')
-
-% Linear filter on red image
-w = [1 1 1; 1 1 1; 1 1 1]/9;
-IR = filter2(w, IR);
-
-
-% Find white lines
-IB_thres = IB > .75;
-IR_thres = IR > .85;
-IG_thres = IG > .85;
-figure(4)
-subplot(1,2,1)
-imshow(IB_thres)
-title('Threshold for red image')
-
+% Sum all images up to get the best image
 I_best = IB_thres+IR_thres+IG_thres+IS;
 I_best = I_best > 3;
 
-subplot(1,2,2)
+% Show images
+figure(2)
+subplot(2,3,1)
+imshow(IR_thres)
+title('Red image')
+
+subplot(2,3,2)
+imshow(IG_thres)
+title('Green image')
+
+subplot(2,3,3)
+imshow(IB_thres)
+title('Blue image')
+
+subplot(2,3,4)
+imshow(IS)
+title('Saturated image')
+
+subplot(2,3,5)
 imshow(I_best)
 title('Best image')
 
+%% Find lines and fill the area between the lines
+% Do this after we have seen Jonathans thesis
 
+%% Find white lines
 
-%% Prewitt filter on the image to find contours
+% Threshold for the RGB-images
+IR_thres = IR > getThreshold(IR, 0.9);
+IG_thres = IG > getThreshold(IR, 0.9);
+IB_thres = IB > getThreshold(IR, 0.9);
 
-wy = [-1 -1 -1; 0 0 0; 1 1 1]/6;
-wx = [-1 0 1; -1 0 1; -1 0 1]/6;
+% Sum all images up to get the best image
+I_bestLines = IB_thres+IR_thres+IG_thres+IS;
+I_bestLines = I_bestLines > 3;
 
-Ix = filter2(wx, IB);
-Iy = filter2(wy, IB);
+imshow(I_bestLines)
 
-Ipre = sqrt(Ix.^2 + Iy.^2);
+% Show blue image
+figure(2)
+subplot(2,3,1)
+imshow(IR_thres)
+title('Red image')
 
-imshow(Ipre)
-shg
+subplot(2,3,2)
+imshow(IG_thres)
+title('Green image')
 
-%% Find grey areas
+subplot(2,3,3)
+imshow(IB_thres)
+title('Blue image')
 
-Igray = zeros(size(IR));
+subplot(2,3,4)
+imshow(IS)
+title('Saturated image')
 
-for i=1:length(IR)
-    for j=1:length(IR)
-        if max([IR(i,j), IG(i,j), IB(i,j)]) - min([IR(i,j), IG(i,j), IB(i,j)]) > 0.09
-            Igray(i,j) = 1;
-        end
-    end
-end
+subplot(2,3,5)
+imshow(I_bestLines)
+title('Best image')
 
-imshow(Igray)
+% Convert I to a hsv-image and threshold the saturated image
+Ihsv = rgb2hsv(I);
+IS = cutImage(Ihsv(:,:,2));
+IS_threshold = getThreshold(IS,0.3)
+IS = IS < IS_threshold; % Good pic to extract the road from!
 
 %% Fill all holes with neighbours more than 6 that are similar
 
-I_filled = fillHoles(I_best, 0.5); 
+I_filled = fillHoles(I_best, 0.8); 
 
 figure(5)
 
@@ -109,27 +112,16 @@ title('Filled')
 
 Ihsv = rgb2hsv(I);
 
-rate = size(Ihsv,2)/size(Ihsv,1);
-Ihsv = resample(Ihsv, rate);
-%Ihsv = im2double(Ihsv);
+IH = cutImage(Ihsv(:,:,1));
+IS = cutImage(Ihsv(:,:,2));
+IV = cutImage(Ihsv(:,:,3));
 
-imshow(Ihsv)
-
-IH =Ir(:,1:length(Ir)/3);
-IS =Ir(:, length(Ir)/3+1 : 2*length(Ir)/3);
-IV =Ir(:, 2*length(Ir)/3+1 : length(Ir));
-
-imshow(IS);
-%%
-
-IH_threshold = getThreshold(IH,0.8)
-IS_threshold = getThreshold(IS,0.75)
+IH_threshold = getThreshold(IH,0.7)
+IS_threshold = getThreshold(IS,0.3)
 IV_threshold = getThreshold(IV,0.8)
 
-IH = IH > 0.2;
-IS = IS > IS_threshold;
-IV = IV > 0.7;
+IH = IH < IH_threshold; % Doesn't give too much info
+IS = IS < IS_threshold; % Good pic to extract the road from!
+IV = IV < IV_threshold; % Doesn't give too much info
 
 imshow(IS);
-
-%imhist(Ihsv(:,:,3))

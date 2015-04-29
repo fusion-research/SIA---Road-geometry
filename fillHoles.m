@@ -14,7 +14,6 @@ for i = 1:3
             
             white = sum(n);
             
-            
             if (1-white/length(n)) > rate
                 Inew(k,l) = 0;
             elseif white/length(n) > rate
