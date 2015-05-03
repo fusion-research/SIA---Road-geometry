@@ -4,6 +4,11 @@ I=imread('Bild3.png');
 rate = size(I,2)/size(I,1);
 Ir=resample(I,rate);
 
+Itest=imresize(I, [size(I,2), size(I,2)]);
+
+imshow(Itest)
+
+%%
 % creating 3 images f�r RGB
 IR =Ir(:,1:length(Ir)/3);
 IG =Ir(:, length(Ir)/3+1 : 2*length(Ir)/3);
@@ -137,6 +142,51 @@ test = bwareaopen(img, 10000);
 figure(21)
 imshow(test)
 
+%% test of findEightNeighbours
+
+N=size(test);
+
+nbrNeighbours=zeros(N);
+
+%% 
+profile on
+
+tic
+for i=1:N(1)
+    for j=1:N(2)
+        nbrNeighbours(i,j)=sum(findEightNeighbours(test, i, j));
+    end
+end
+toc
+
+p=profile('info');
+
+
+%%
+tmptest=nbrNeighbours>1;
+
+figure(333)
+imshow(tmptest)
+
+%% 
+tic
+nbrNeighbours=findEightNeighboursSum(test);
+toc
+
+%%
+nbrNeighbours=test;
+
+figure(333)
+imshow(nbrNeighbours)
+%%
+
+%for i=1:5
+    nbrNeighbours=findEightNeighboursSum(nbrNeighbours);
+    nbrNeighbours=nbrNeighbours>4;
+%end
+figure(333)
+imshow(nbrNeighbours)
+
 %% road with filling and noise reduction (closing)
 
 test2=test;
@@ -171,3 +221,153 @@ test4=imopen(test, SE_arb);
 
 figure(31)
 imshow(test4)
+
+%% distance conversions: pixels to cm
+
+x1=[1 1];
+x2=[2 2];
+
+dpix=sqrt((x1(1)-x2(1))^2 + (x1(2)-x2(2))^2); % calculate distance in pixels
+
+pix_per_inch=get(0, 'ScreenPixelsPerInch');
+CM_PER_INCH=2.54;
+img_scale=3000; % Scale of the image: one m on screen <==> IMG_SCALE meters in reality
+% TODO: decide on a "zoom level" and find the corresponding img scale
+
+% pix_to_m_scaled=img_scale*CM_PER_INCH*10^(-3)/pix_per_inch;
+pix_to_m_scaled=getScalingPixToM(img_scale);
+
+dm_scaled=dpix*pix_to_m_scaled;
+
+%%
+% get(0, 'ScreenPixelsPerInch') = 85
+% get(groot, 'ScreenPixelsPerInch')= 90
+
+% seems like ScreenPixelsPerInch might be inaccurate sometimes as output 
+% depends on OS: "value shown is the setting of the display resolution 
+% specified in your system preferences". investigate this further. 
+
+
+96*16/17 % pixels per inc according to website and using a ruler
+% http://www.infobyip.com/detectmonitordpi.php. groot seems correct. 
+
+%%
+
+% divide data into sections which are h meters long in x-dir
+
+% n, m, d, h, q are parameters which need to be fitted
+
+% assume that data is found in P 
+% m number of iterations for the algorithm
+
+% n number of points which we sample
+
+
+n=2;
+
+
+
+%for i=1:Plength
+    
+    %for j=1:m
+        vec=1:nbrpts;
+        data=;
+        y=datasample(vec, n, 'Replace', false);
+        
+        samplevec=zeros(n,2);
+        
+        for k=1:n
+           sampleVec(k) 
+        end
+        
+        p=polyfit(data(:,1), y, 1);
+        
+    
+   
+    
+    
+    
+    
+    
+    %end
+%end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%% backup f8n
+
+% function n = findEightNeighbours(I, x, y)
+% 
+% N = size(I);
+% n = [];
+% 
+% 
+% % East
+% if x== N(1)
+%     ;
+% else
+%     n(end+1) = I(x+1,y);
+% end
+% 
+% 
+% % West
+% if x == 1
+%     ;
+% else
+%     n(end+1) = I(x-1,y);
+% end
+% 
+% 
+% % NW, NE
+% if y == 1
+%     ;
+% else
+%     if(x==1) % NE
+%         n(end+1) = I(x+1,y-1);
+%         
+%     elseif(x==N(1)) % NW
+%         n(end+1) = I(x-1,y-1);
+%         
+%     else % NE and NW
+%         n(end+1) = I(x+1,y-1);
+%         n(end+1) = I(x-1,y-1);
+%     end
+%     n(end+1) = I(x,y-1);
+% end
+% 
+% 
+% 
+% % SW, SE
+% if y == N(2)
+%     ;
+% else
+%     if(x==1) % SE
+%         n(end+1) = I(x+1,y+1);
+%         
+%     elseif(x==N(1)) % SW
+%         n(end+1) = I(x-1,y+1);
+%         
+%     else % SE and SW
+%         n(end+1) = I(x+1,y+1);
+%         n(end+1) = I(x-1,y+1);
+%     end
+%     n(end+1) = I(x,y+1);
+% end
+% 
+% 
+% end
