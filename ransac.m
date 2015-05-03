@@ -92,6 +92,7 @@ for l=1:m
     end
 end
 
+%disp(maxC)
 
 if(~(maxC>q && length(bestPoly)>1))
     disp('**Warning: no good polynomial found**')

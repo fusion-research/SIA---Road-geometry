@@ -59,8 +59,10 @@ subplot(2,3,5)
 imshow(I_best)
 title('Best image')
 
+
+
 % Find the contours in the image
-Icontour = findContour(I_best, 4/8, 6/8);
+Icontour = findContour(I_best, 5/8, 5/8);
 
 subplot(2,3,6)
 imshow(Icontour)
@@ -69,7 +71,7 @@ title('Contours')
 %% Divide the image into smaller segments
 clc
 
-nbrSegments = 25; % Must be a square number
+nbrSegments = 4; % Must be a square number
 sqrtSeg = sqrt(nbrSegments);
 pointsPerSegment = floor(length(Icontour)/sqrtSeg);
 
@@ -89,22 +91,24 @@ for i = 1:sqrtSeg
 end
 
 figure(3)
-for i = 1:25
-    subplot(5,5,i)
+for i = 1:4
+    subplot(2,2,i)
     imshow(Ismall(:,:,i))
 end
 
 %% Try to find lines with RanSaC
 
-n = ;
-t = ;
-m = ;
-q = ;
+n = 3;
+t = 1;
+m = 100;
+q = 1;
 
-bestPoly = ransac(Ismall(:,:,4), n, t, m, q);
-    
+tic
+bestPoly = ransac(Ismall(:,:,4), n, t, m, q)
+toc 
+
 x = 1:size(Ismall,1);
-y = bestPoly(1)*x + bestPoly(2);
+y = polyval(bestPoly, x, 'r');
 
 figure(4)
 subplot(1,2,1)
@@ -114,6 +118,7 @@ title('Image segment')
 subplot(1,2,2)
 plot(x,y);
 title('Found linear function')
+axis([0 size(Ismall,1) 0 size(Ismall,1)])
 
 %% Find white lines
 
@@ -153,6 +158,13 @@ Ihsv = rgb2hsv(I);
 IS = cutImage(Ihsv(:,:,2));
 IS_threshold = getThreshold(IS,0.3)
 IS = IS < IS_threshold; % Good pic to extract the road from!
+
+%%
+
+Icontour_lines = findContour(I_bestLines, 4/8, 5/8);
+
+figure(8)
+imshow(Icontour_lines)
 
 %% Fill all holes
 
