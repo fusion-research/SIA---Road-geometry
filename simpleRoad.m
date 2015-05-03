@@ -50,9 +50,17 @@ subplot(2,3,5)
 imshow(I_best)
 title('Best image')
 
-%% Find lines and fill the area between the lines
-% Do this after we have seen Jonathans thesis
+%% Find the contours in the image
 
+Icontour = findContour(I_best, 5/8);
+
+subplot(2,3,6)
+imshow(Icontour)
+title('Contours')
+
+%% Find lines and fill the area between the lines
+
+%% Given the boundaries, fill the image
 
 
 %% Find white lines
@@ -95,10 +103,6 @@ Ihsv = rgb2hsv(I);
 IS = cutImage(Ihsv(:,:,2));
 IS_threshold = getThreshold(IS,0.3)
 IS = IS < IS_threshold; % Good pic to extract the road from!
-
-%% Given the boundaries, fill the image
-
-
 
 %% Fill all holes
 
