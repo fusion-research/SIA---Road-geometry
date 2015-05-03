@@ -88,10 +88,32 @@ for i = 1:sqrtSeg
     end
 end
 
+figure(3)
 for i = 1:25
     subplot(5,5,i)
     imshow(Ismall(:,:,i))
 end
+
+%% Try to find lines with RanSaC
+
+n = ;
+t = ;
+m = ;
+q = ;
+
+bestPoly = ransac(Ismall(:,:,4), n, t, m, q);
+    
+x = 1:size(Ismall,1);
+y = bestPoly(1)*x + bestPoly(2);
+
+figure(4)
+subplot(1,2,1)
+imshow(Ismall(:,:,4))
+title('Image segment')
+
+subplot(1,2,2)
+plot(x,y);
+title('Found linear function')
 
 %% Find white lines
 
@@ -104,10 +126,8 @@ IB_thres = IB > getThreshold(IR, 0.9);
 I_bestLines = IB_thres+IR_thres+IG_thres+IS;
 I_bestLines = I_bestLines > 3;
 
-imshow(I_bestLines)
-
 % Show blue image
-figure(2)
+figure(5)
 subplot(2,3,1)
 imshow(IR_thres)
 title('Red image')
@@ -140,9 +160,7 @@ tic
 I_filled = fillHoles(I_best, 0.8);
 toc
 
-figure(5)
-clf
-
+figure(6)
 subplot(1,2,1)
 imshow(I_best)
 title('Not filled')
@@ -167,4 +185,5 @@ IH = IH < IH_threshold; % Doesn't give too much info
 IS = IS < IS_threshold; % Good pic to extract the road from!
 IV = IV > IV_threshold; % Doesn't give too much info
 
+figure(7)
 imshow(IV);
