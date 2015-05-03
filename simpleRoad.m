@@ -50,15 +50,6 @@ subplot(2,3,5)
 imshow(I_best)
 title('Best image')
 
-
-%%
-
-prewitt = fspecial('prewitt');
-
-I_bestContour = imfilter(I_best,prewitt);
-
-imshow(I_bestContour)
-
 %% Find lines and fill the area between the lines
 % Do this after we have seen Jonathans thesis
 
@@ -109,11 +100,14 @@ IS = IS < IS_threshold; % Good pic to extract the road from!
 
 
 
-%% Fill all holes with neighbours more than 6 that are similar
+%% Fill all holes
 
+tic
 I_filled = fillHoles(I_best, 0.8); 
+toc
 
 figure(5)
+clf
 
 subplot(1,2,1)
 imshow(I_best)
