@@ -1,5 +1,5 @@
 %% PROJECT 142 1.0
-I=imread('Bild5.png');
+I=imread('Bild2.png');
 rate = size(I,2)/size(I,1);
 
 %% RGB
@@ -96,6 +96,10 @@ IY_threshold = IY < 0.8;
 II_threshold = II < 0.7;
 IQ_threshold = IQ < 0.8;%threshold_IB;%mean(mean(IB)); %0.6 good for bild1
 %figure(2), imshow(IB_threshold)
+
+
+
+%% Morph 
 
 
 %% interative analysis
