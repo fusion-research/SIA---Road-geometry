@@ -5,6 +5,7 @@ rate = size(I,2)/size(I,1);
 Ir=resample(I,rate);
 figure(1), imshow(Ir)
 
+
 % creating 3 images f�r RGB
 IR =Ir(:,1:length(Ir)/3);
 IG =Ir(:, length(Ir)/3+1 : 2*length(Ir)/3);
