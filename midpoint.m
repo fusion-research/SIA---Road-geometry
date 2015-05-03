@@ -1,4 +1,4 @@
-function T=midpoint(I,Tstart);
+function T=midpoint(I,Tstart)
 %T=midpoint(I,Tstart);
 %
 %Uses the midpoint method of finding a threshold value of I

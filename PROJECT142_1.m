@@ -5,10 +5,18 @@ rate = size(I,2)/size(I,1);
 %% RGB
 Ir=resample(I,rate);
 
+<<<<<<< HEAD
 % creating 3 images for RGB
 IR =Ir(:, 1:length(Ir)/3);
 IG =Ir(:,   length(Ir)/3+1 : 2*length(Ir)/3);
 IB =Ir(:, 2*length(Ir)/3+1 :   length(Ir));
+=======
+
+% creating 3 images f�r RGB
+IR =Ir(:,1:length(Ir)/3);
+IG =Ir(:, length(Ir)/3+1 : 2*length(Ir)/3);
+IB =Ir(:, 2*length(Ir)/3+1 : length(Ir));
+>>>>>>> a81d88349eaffe17e581753ecab8195c5f4ff0b4
 
 figure(1); set(figure(1),'position',[1 100 1979 1079])
 subplot(2,3,[1,2,3]);imshow(Ir)
