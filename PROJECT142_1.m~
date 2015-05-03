@@ -99,7 +99,9 @@ IQ_threshold = IQ < 0.8;%threshold_IB;%mean(mean(IB)); %0.6 good for bild1
 
 
 
-%% Morph 
+%% Morphology using neighbours
+
+
 
 
 %% interative analysis

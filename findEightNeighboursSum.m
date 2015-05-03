@@ -1,8 +1,7 @@
 function n = findEightNeighboursSum(I)
 
 % I is assumed to be a square, binary matrix. 
-
-% n is a matrix containing the number of neighbours for each element of I.
+% n is a matrix containing the number of white neighbours for each element of I.
 
 s=size(I);
 N=s(1);
@@ -35,7 +34,8 @@ end
 % Inner points
 for i=2:N-1
     for j=2:N-1
-        n(i,j) = I(i-1, j-1) + I(i-1, j) + I(i-1, j+1) + I(i, j-1) + I(i, j+1) + I(i+1, j-1) + I(i+1, j) + I(i+1, j+1);
+        n(i,j) = I(i-1, j-1) + I(i-1, j) + I(i-1, j+1) + I(i, j-1) +...
+            I(i, j+1) + I(i+1, j-1) + I(i+1, j) + I(i+1, j+1);
     end
 end
 

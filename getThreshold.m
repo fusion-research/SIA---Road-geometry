@@ -2,7 +2,7 @@ function T = getThreshold(I, rate)
 % T = getThreshold(I, rate)
 %
 % Function that finds a threshold value such that about the amount of
-% values, specified by 'rate', are to the left in the histogram of the 
+% values, specified by 'rate', are to the left in the histogram of the
 % image.
 
 % Get histogram
