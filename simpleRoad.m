@@ -21,11 +21,11 @@ IB_thres = IB > getThreshold(IR, 0.5);
 % Convert I to a hsv-image and threshold the saturated image
 Ihsv = rgb2hsv(I);
 IS = cutImage(Ihsv(:,:,2));
-IS_threshold = getThreshold(IS,0.3)
+IS_threshold = getThreshold(IS,0.3);
 IS = IS < IS_threshold; % Good pic to extract the road from!
 
 IV = cutImage(Ihsv(:,:,3));
-IV_threshold = getThreshold(IV,0.85)
+IV_threshold = getThreshold(IV,0.85);
 IV = IV > IV_threshold; % Doesn't give too much info
 
 % Sum all images up to get the best image. Works good for 'Bild2' to reduce
@@ -66,8 +66,32 @@ subplot(2,3,6)
 imshow(Icontour)
 title('Contours')
 
-%% Given the boundaries, fill the image
+%% Divide the image into smaller segments
+clc
 
+nbrSegments = 25; % Must be a square number
+sqrtSeg = sqrt(nbrSegments);
+pointsPerSegment = floor(length(Icontour)/sqrtSeg);
+
+% Memory allocation
+Ismall = zeros(pointsPerSegment, pointsPerSegment, sqrtSeg);
+
+k = 1;
+
+% Create small image segments
+for i = 1:sqrtSeg
+    for j = 1:sqrtSeg
+        tempVecX = (i-1)*pointsPerSegment+1:i*pointsPerSegment;
+        tempVecY = (j-1)*pointsPerSegment+1:j*pointsPerSegment;
+        Ismall(:,:,k) = Icontour(tempVecX,tempVecY);
+        k = k + 1;
+    end
+end
+
+for i = 1:25
+    subplot(5,5,i)
+    imshow(Ismall(:,:,i))
+end
 
 %% Find white lines
 
@@ -113,7 +137,7 @@ IS = IS < IS_threshold; % Good pic to extract the road from!
 %% Fill all holes
 
 tic
-I_filled = fillHoles(I_best, 0.8); 
+I_filled = fillHoles(I_best, 0.8);
 toc
 
 figure(5)
