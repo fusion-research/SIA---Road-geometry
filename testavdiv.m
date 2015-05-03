@@ -405,39 +405,37 @@ profile viewer
 %%
 polyFound=ransac(data, 3, 2, 100, 3);
 
-
 %%
 
-data(C1(2),1)
-data(C1(2),2)
-%%
+I=[1 1;
+    0 1
+    0 0];
 
-plot(xVal, pEval)
+find(I);
 
-%%
+I(5);
 
-        for k=1:n2
-            sampleVec2(k,1)=data(C1(k),1);
-            sampleVec2(k,2)=data(C1(k),2);
-        end
-
+[tmp1, tmp2]=ind2sub(size(I), 5)
 
 
 %%
 
-B=cell2mat(consensusSet)
+I=[1 1 1;
+    0 1 1;
+    0 0 0];
 
-
-
+K=find(I);
+data=zeros(length(K),2);
+for i=1:length(K)
+    [tmp1, tmp2]=ind2sub(size(I), K(i));
+    data(i,1)=tmp1;
+    data(i,2)=tmp2;
+    
+end
+data % 1,1 
 %%
 
-a=cat(1, consensusSet{:})
-
-
-
-
-
-
+[tmp1, tmp2]=ind2sub(size(I), 4)
 
 %% backup f8n
 

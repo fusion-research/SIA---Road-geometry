@@ -1,17 +1,27 @@
-function bestPoly = ransac(data, n, t, m, q)
+function bestPoly = ransac(I, n, t, m, q)
 
-% Data is a vector where each row corresponds to one observation (x,y)
-
+% I : binary matrix where 1 corresponds to observation and 0 corresponds to
+% no observation
 % n : number of points used to sample first polynomial
 % t : distance from polynomial which is accepted
 % m : number of iterations
 % q : lower limit for number of acceptable points for consensus set
-% Providing only one argument (data) chooses default values of params.
+% Providing only one argument (I) chooses default values of params.
 
 % Returns bestPoly: the best polynomial found fitted by MATLAB's polyfit,
 % i.e. it contains the the coefficients for the corresponding polynomial
 % If no good polynomial is found as message will be disp'ed and 0 is
 % returned. 
+
+K=find(I);
+data=zeros(length(K),2);
+for i=1:length(K)
+    [tmp1, tmp2]=ind2sub(size(I), K(i));
+    data(i,1)=tmp1;
+    data(i,2)=tmp2;
+end
+
+% Data is a vector where each row corresponds to one observation (x,y)
 
 % Standard settings
 if(nargin==1)
