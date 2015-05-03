@@ -24,6 +24,15 @@ IS = cutImage(Ihsv(:,:,2));
 IS_threshold = getThreshold(IS,0.3)
 IS = IS < IS_threshold; % Good pic to extract the road from!
 
+IV = cutImage(Ihsv(:,:,3));
+IV_threshold = getThreshold(IV,0.85)
+IV = IV > IV_threshold; % Doesn't give too much info
+
+% Sum all images up to get the best image. Works good for 'Bild2' to reduce
+% the reflections from the water
+%I_best = IB_thres+IR_thres+IG_thres+IS+IV;
+%I_best = I_best > 4;
+
 % Sum all images up to get the best image
 I_best = IB_thres+IR_thres+IG_thres+IS;
 I_best = I_best > 3;
@@ -50,15 +59,12 @@ subplot(2,3,5)
 imshow(I_best)
 title('Best image')
 
-%% Find the contours in the image
-
-Icontour = findContour(I_best, 5/8);
+% Find the contours in the image
+Icontour = findContour(I_best, 4/8, 6/8);
 
 subplot(2,3,6)
 imshow(Icontour)
 title('Contours')
-
-%% Find lines and fill the area between the lines
 
 %% Given the boundaries, fill the image
 
@@ -129,12 +135,12 @@ IH = cutImage(Ihsv(:,:,1));
 IS = cutImage(Ihsv(:,:,2));
 IV = cutImage(Ihsv(:,:,3));
 
-IH_threshold = getThreshold(IH,0.7)
+IH_threshold = getThreshold(IH,0.9)
 IS_threshold = getThreshold(IS,0.3)
-IV_threshold = getThreshold(IV,0.8)
+IV_threshold = getThreshold(IV,0.85)
 
 IH = IH < IH_threshold; % Doesn't give too much info
 IS = IS < IS_threshold; % Good pic to extract the road from!
-IV = IV < IV_threshold; % Doesn't give too much info
+IV = IV > IV_threshold; % Doesn't give too much info
 
-imshow(IS);
+imshow(IV);
