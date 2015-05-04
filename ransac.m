@@ -13,6 +13,8 @@ function bestPoly = ransac(I, n, t, m, q)
 % If no good polynomial is found as message will be disp'ed and 0 is
 % returned. 
 
+%TODO: Handle image-segments without any white pixels%---------------------
+
 K=find(I);
 data=zeros(length(K),2);
 for i=1:length(K)

@@ -62,7 +62,7 @@ title('Best image')
 
 
 % Find the contours in the image
-Icontour = findContour(I_best, 5/8, 5/8);
+Icontour = findContour(I_best, 2/8, 3/8);
 
 subplot(2,3,6)
 imshow(Icontour)
@@ -71,54 +71,68 @@ title('Contours')
 %% Divide the image into smaller segments
 clc
 
-nbrSegments = 4; % Must be a square number
-sqrtSeg = sqrt(nbrSegments);
-pointsPerSegment = floor(length(Icontour)/sqrtSeg);
+subplot(1,1,1)
+imshow(Icontour)
 
-% Memory allocation
-Ismall = zeros(pointsPerSegment, pointsPerSegment, sqrtSeg);
+nbrSegments = 4;
 
-k = 1;
-
-% Create small image segments
-for i = 1:sqrtSeg
-    for j = 1:sqrtSeg
-        tempVecX = (i-1)*pointsPerSegment+1:i*pointsPerSegment;
-        tempVecY = (j-1)*pointsPerSegment+1:j*pointsPerSegment;
-        Ismall(:,:,k) = Icontour(tempVecX,tempVecY);
-        k = k + 1;
-    end
-end
+tic
+Ismall = getSegments(Icontour, nbrSegments);
+toc
 
 figure(3)
-for i = 1:4
-    subplot(2,2,i)
+clf
+for i = 1:nbrSegments
+    subplot(sqrt(nbrSegments),sqrt(nbrSegments),i)
     imshow(Ismall(:,:,i))
 end
 
+
 %% Try to find lines with RanSaC
 
-n = 3;
+n = 15;
 t = 1;
-m = 100;
+m = 25;
 q = 1;
 
-tic
-bestPoly = ransac(Ismall(:,:,4), n, t, m, q)
-toc 
+interations = 10;
+polySum = zeros(nbrSegments,2);
 
-x = 1:size(Ismall,1);
-y = polyval(bestPoly, x, 'r');
+for k = 1:interations
+    for smallImageNrb = 1:nbrSegments;
+        
+        bestPoly = ransac(Ismall(:,:,smallImageNrb), n, t, m, q);
+        
+        x = 1:size(Ismall,1);
+        y = polyval(bestPoly, x);
+        
+        figure(4)
+        subplot(sqrt(nbrSegments),sqrt(nbrSegments),smallImageNrb)
+        imagesc([1 size(Ismall,1)],[1 size(Ismall,2)],Ismall(:,:,smallImageNrb))
+        hold on
+        plot(y,x,'r')
+        axis([0 size(Ismall,1) 0 size(Ismall,1)])
+        
+        polySum(smallImageNrb,:) = polySum(smallImageNrb,:) + bestPoly;
+        
+    end
+end
 
-figure(4)
-subplot(1,2,1)
-imshow(Ismall(:,:,4))
-title('Image segment')
-
-subplot(1,2,2)
-plot(x,y);
-title('Found linear function')
-axis([0 size(Ismall,1) 0 size(Ismall,1)])
+polySum = polySum/interations;
+        
+for smallImageNrb = 1:nbrSegments;
+    
+    x = 1:size(Ismall,1);
+    y = polyval(polySum(smallImageNrb,:), x);
+    
+    figure(4)
+    subplot(sqrt(nbrSegments),sqrt(nbrSegments),smallImageNrb)
+    imagesc([1 size(Ismall,1)],[1 size(Ismall,2)],Ismall(:,:,smallImageNrb))
+    hold on
+    plot(y,x,'r')
+    axis([0 size(Ismall,1) 0 size(Ismall,1)])
+    
+end
 
 %% Find white lines
 
