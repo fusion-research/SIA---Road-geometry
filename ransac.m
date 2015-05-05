@@ -33,6 +33,7 @@ function bestPoly = ransac(I, n, t, m, q)
 
 %tmpavg=0;
 
+
 % tic
 % K=find(I);
 % data=zeros(length(K),2);
@@ -149,6 +150,7 @@ for l=1:m
 end
 
 %tmpavg/m
+%disp(maxC)
 
 if(~(maxC>q && length(bestPoly)>1))
     disp('**Warning: no good polynomial found**')

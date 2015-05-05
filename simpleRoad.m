@@ -59,8 +59,10 @@ subplot(2,3,5)
 imshow(I_best)
 title('Best image')
 
+
+
 % Find the contours in the image
-Icontour = findContour(I_best, 4/8, 6/8);
+Icontour = findContour(I_best, 2/8, 3/8);
 
 subplot(2,3,6)
 imshow(Icontour)
@@ -69,28 +71,67 @@ title('Contours')
 %% Divide the image into smaller segments
 clc
 
-nbrSegments = 25; % Must be a square number
-sqrtSeg = sqrt(nbrSegments);
-pointsPerSegment = floor(length(Icontour)/sqrtSeg);
+subplot(1,1,1)
+imshow(Icontour)
 
-% Memory allocation
-Ismall = zeros(pointsPerSegment, pointsPerSegment, sqrtSeg);
+nbrSegments = 4;
 
-k = 1;
+tic
+Ismall = getSegments(Icontour, nbrSegments);
+toc
 
-% Create small image segments
-for i = 1:sqrtSeg
-    for j = 1:sqrtSeg
-        tempVecX = (i-1)*pointsPerSegment+1:i*pointsPerSegment;
-        tempVecY = (j-1)*pointsPerSegment+1:j*pointsPerSegment;
-        Ismall(:,:,k) = Icontour(tempVecX,tempVecY);
-        k = k + 1;
+figure(3)
+clf
+for i = 1:nbrSegments
+    subplot(sqrt(nbrSegments),sqrt(nbrSegments),i)
+    imshow(Ismall(:,:,i))
+end
+
+
+%% Try to find lines with RanSaC
+
+n = 15;
+t = 1;
+m = 25;
+q = 1;
+
+interations = 10;
+polySum = zeros(nbrSegments,2);
+
+for k = 1:interations
+    for smallImageNrb = 1:nbrSegments;
+        
+        bestPoly = ransac(Ismall(:,:,smallImageNrb), n, t, m, q);
+        
+        x = 1:size(Ismall,1);
+        y = polyval(bestPoly, x);
+        
+        figure(4)
+        subplot(sqrt(nbrSegments),sqrt(nbrSegments),smallImageNrb)
+        imagesc([1 size(Ismall,1)],[1 size(Ismall,2)],Ismall(:,:,smallImageNrb))
+        hold on
+        plot(y,x,'r')
+        axis([0 size(Ismall,1) 0 size(Ismall,1)])
+        
+        polySum(smallImageNrb,:) = polySum(smallImageNrb,:) + bestPoly;
+        
     end
 end
 
-for i = 1:25
-    subplot(5,5,i)
-    imshow(Ismall(:,:,i))
+polySum = polySum/interations;
+        
+for smallImageNrb = 1:nbrSegments;
+    
+    x = 1:size(Ismall,1);
+    y = polyval(polySum(smallImageNrb,:), x);
+    
+    figure(4)
+    subplot(sqrt(nbrSegments),sqrt(nbrSegments),smallImageNrb)
+    imagesc([1 size(Ismall,1)],[1 size(Ismall,2)],Ismall(:,:,smallImageNrb))
+    hold on
+    plot(y,x,'r')
+    axis([0 size(Ismall,1) 0 size(Ismall,1)])
+    
 end
 
 %% Find white lines
@@ -104,10 +145,8 @@ IB_thres = IB > getThreshold(IR, 0.9);
 I_bestLines = IB_thres+IR_thres+IG_thres+IS;
 I_bestLines = I_bestLines > 3;
 
-imshow(I_bestLines)
-
 % Show blue image
-figure(2)
+figure(5)
 subplot(2,3,1)
 imshow(IR_thres)
 title('Red image')
@@ -134,15 +173,20 @@ IS = cutImage(Ihsv(:,:,2));
 IS_threshold = getThreshold(IS,0.3)
 IS = IS < IS_threshold; % Good pic to extract the road from!
 
+%%
+
+Icontour_lines = findContour(I_bestLines, 4/8, 5/8);
+
+figure(8)
+imshow(Icontour_lines)
+
 %% Fill all holes
 
 tic
 I_filled = fillHoles(I_best, 0.8);
 toc
 
-figure(5)
-clf
-
+figure(6)
 subplot(1,2,1)
 imshow(I_best)
 title('Not filled')
@@ -167,4 +211,5 @@ IH = IH < IH_threshold; % Doesn't give too much info
 IS = IS < IS_threshold; % Good pic to extract the road from!
 IV = IV > IV_threshold; % Doesn't give too much info
 
+figure(7)
 imshow(IV);
