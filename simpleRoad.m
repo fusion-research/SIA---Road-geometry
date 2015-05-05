@@ -4,7 +4,7 @@ clear all
 clf
 
 % Read image of simple road
-I = imread('Bild4.png');
+I = imread('Bild3.png');
 
 % Show original image
 figure(1)
@@ -32,9 +32,9 @@ IV_threshold = getThreshold(IV,0.85);
 IV = IV > IV_threshold; % Doesn't give too much info
 
 % Sum all images up to get the best image. Works good for 'Bild2' to reduce
-% the reflections from the water
-%I_best = IB_thres+IR_thres+IG_thres+IS+IV;
-%I_best = I_best > 4;
+%the reflections from the water
+% I_best = IB_thres+IR_thres+IG_thres+IS+IV;
+% I_best = I_best > 4;
 
 % Sum all images up to get the best image
 I_best = IB_thres+IR_thres+IG_thres+IS;
@@ -64,7 +64,7 @@ title('Best image')
 
 
 % Find the contours in the image
-Icontour = findContour(I_best, 2/8, 4/8);
+Icontour = findContour(I_best, 2/8, 3/8);
 
 subplot(2,3,6)
 imshow(Icontour)
@@ -101,9 +101,8 @@ polySum = zeros(nbrSegments,2);
 nbrPoly = zeros(nbrSegments,1);
 
 tic
-figure(4)
 x = 1:size(Ismall,1);
-sqrtNbrSegments = sqrt(nbrSegments);
+sqrtSeg = sqrt(nbrSegments);
 
 % Do the RanSaC-algoritm 'iterations' number of times
 for k = 1:interations
@@ -119,7 +118,8 @@ for k = 1:interations
             
             y = polyval(bestPoly, x);
 
-            subplot(sqrtNbrSegments,sqrtNbrSegments,smallImageNrb)
+            figure(4)
+            subplot(sqrtSeg,sqrtSeg,smallImageNrb)
             imagesc([1 x(end)],[1 x(end)],Ismall(:,:,smallImageNrb))
             hold on
             plot(y,x,'r')
@@ -131,7 +131,8 @@ for k = 1:interations
         % If no spline is found, just display the image-segment
         else
             
-            subplot(sqrtNbrSegments,sqrtNbrSegments,smallImageNrb)
+            figure(4)
+            subplot(sqrtSeg,sqrtSeg,smallImageNrb)
             imshow(Ismall(:,:,smallImageNrb))
             set(gca,'xtick',[],'ytick',[]);
             
@@ -143,7 +144,7 @@ toc
 
 % Find a mean spline for each image-segment
 for smallImageNrb = 1:nbrSegments
-    polySum(smallImageNrb,:) = polySum(smallImageNrb,:)./nbrPoly(smallImageNrb);
+    polySum(smallImageNrb,:) = polySum(smallImageNrb,:)/nbrPoly(smallImageNrb);
 end
 
 % Plot the mean spline for each image-segment
@@ -151,7 +152,8 @@ for smallImageNrb = 1:nbrSegments;
     
     y = polyval(polySum(smallImageNrb,:), x);
 
-    subplot(sqrt(nbrSegments),sqrt(nbrSegments),smallImageNrb)
+    figure(4)
+    subplot(sqrtSeg,sqrtSeg,smallImageNrb)
     imagesc([1 size(Ismall,1)],[1 size(Ismall,2)],Ismall(:,:,smallImageNrb))
     hold on
     plot(y,x,'r')
@@ -163,25 +165,35 @@ end
 %% Find the true lines in the image
 
 IfinalContour = zeros(size(Icontour));
+pointsPerSegment = floor(length(Icontour)/sqrtSeg);
 
-maxY = polyval(polySum(1,:),x(end))
-minY = polyval(polySum(3,:),x(1))
+for i = 1:(nbrSegments-sqrtSeg)
 
-majorX = 1:size(Icontour,1);
-
-if abs(maxY - minY) < 0.05*x(end)
-    finalPoly = (polySum(1,:) + polySum(3,:))/2;
-    y = round(polyval(finalPoly, majorX));
+    startX = 1+(ceil(i/sqrtSeg)-1)*pointsPerSegment
+    stopX = startX + 2*pointsPerSegment - 1
     
-    for i = 1:majorX(end)
-        IfinalContour(majorX(i),y(i)) = 1;
+    maxY = polyval(polySum(i,:),x(end));
+    minY = polyval(polySum(i+sqrtSeg,:),x(1));
+        
+    if abs(maxY - minY) < 0.5*x(end)
+        
+        majorX = startX:stopX;
+        finalPoly = (polySum(i,:) + polySum(i+sqrtSeg,:))/2;
+        y = round(polyval(finalPoly, majorX)) + abs(1-mod(i,sqrtSeg))*pointsPerSegment;
+        
+        y(find(y == 0)) = 1;
+        y = y(find(y > 0));
+        
+        for i = 1:length(y)
+            IfinalContour(majorX(i), y(i)) = 1;
+        end
+        
     end
-    
-    figure(5)
-    clf
-    imshow(IfinalContour)
-    
 end
+
+figure(5)
+clf
+imshow(IfinalContour)
 
 %% Find white lines
 
