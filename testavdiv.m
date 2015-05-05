@@ -1,4 +1,10 @@
 %% PROJECT 142 1.0
+
+cd /chalmers/users/sstahl/Desktop/SIA projekt/SIA---Road-geometry
+
+%%
+
+
 I=imread('Bild3.png');
 
 rate = size(I,2)/size(I,1);
@@ -251,7 +257,7 @@ dm_scaled=dpix*pix_to_m_scaled;
 96*16/17 % pixels per inc according to website and using a ruler
 % http://www.infobyip.com/detectmonitordpi.php. groot seems correct. 
 
-%% TEST AV RANSAC, inlined
+%% TEST AV RANSAC, inlined (GAMMAL)
 
 % Jonathan använder n=4, m=4000, d=0.1, q=60, h=10
 
@@ -381,7 +387,7 @@ else
 end
 
 
-%% optimization
+%% 
 
 data=[1 1
       2 5
@@ -396,26 +402,69 @@ data=[1 1
       5.4 1.5
       5.5 1.8];
   
-profile on
+%profile on
 tic
 polyFound=ransac(data);
 toc
-profile viewer
+%profile viewer
+
+
+
+%warning('off', 'MATLAB:polyfit:RepeatedPointsOrRescale')
+
+
+%% 
+
+I=[1 0 0
+   0 1 0
+   0 0 1];
+
+K=find(I);
+data=zeros(length(K),2);
+for i=1:length(K)
+    [tmp1, tmp2]=ind2sub(size(I), K(i));
+    data(i,1)=tmp1;
+    data(i,2)=tmp2;
+end
+
+data
 
 %%
-polyFound=ransac(data, 3, 2, 100, 3);
+
+[i,j]=find(I>0);
+data=[i,j];
 
 %%
 
-I=[1 1;
-    0 1
-    0 0];
 
-find(I);
+I=zeros(400, 400);
 
-I(5);
+%% optimization: generate test image with some noise
 
-[tmp1, tmp2]=ind2sub(size(I), 5)
+N=400;
+
+p=1/100;
+
+I=binornd(ones(200), p*ones(200));
+
+I(N/2,:)=1;
+
+imshow(I)
+%%
+
+% Performance, DD, N=400:
+% Original : ~ 1.24
+% Changing order of unique and rm of 0's :  0.72
+% Changing the way I is converted into data vec: 0.225
+
+%profile on
+tic
+polyFound=ransac(I);
+toc
+%profile viewer
+
+
+size(polyFound)
 
 
 %%
@@ -433,69 +482,216 @@ for i=1:length(K)
     
 end
 data % 1,1 
-%%
 
-[tmp1, tmp2]=ind2sub(size(I), 4)
+%% Backup of ransac pre optimization
 
-%% backup f8n
-
-% function n = findEightNeighbours(I, x, y)
+% function bestPoly = ransac(I, n, t, m, q)
 % 
-% N = size(I);
-% n = [];
+% % I : binary matrix where 1 corresponds to observation and 0 corresponds to
+% % no observation
+% % n : number of points used to sample first polynomial
+% % t : distance from polynomial which is accepted
+% % m : number of iterations
+% % q : lower limit for number of acceptable points for consensus set
+% % Providing only one argument (I) chooses default values of params.
 % 
+% % Returns bestPoly: the best polynomial found fitted by MATLAB's polyfit,
+% % i.e. it contains the the coefficients for the corresponding polynomial
+% % If no good polynomial is found as message will be disp'ed and 0 is
+% % returned. 
 % 
-% % East
-% if x== N(1)
-%     ;
-% else
-%     n(end+1) = I(x+1,y);
+% % Suppress warning from polyfit (irrelevant for m large enough)
+% warning('off', 'MATLAB:polyfit:RepeatedPointsOrRescale');
+% 
+% K=find(I);
+% data=zeros(length(K),2);
+% for i=1:length(K)
+%     [tmp1, tmp2]=ind2sub(size(I), K(i));
+%     data(i,1)=tmp1;
+%     data(i,2)=tmp2;
 % end
 % 
+% % Data is a vector where each row corresponds to one observation (x,y)
 % 
-% % West
-% if x == 1
-%     ;
-% else
-%     n(end+1) = I(x-1,y);
+% % Standard settings
+% if(nargin==1)
+%     n=2; 
+%     t=2; 
+%     m=100; 
+%     q=n; 
 % end
+%     
+% maxC=0; % number of elements in largest consensus set so far
+% ny=length(data); % number of evaluation points for polynomial
 % 
+% bestPoly=0;
+%   
+% vec=1:length(data);
+% sampleVec1=zeros(n,2);
 % 
-% % NW, NE
-% if y == 1
-%     ;
-% else
-%     if(x==1) % NE
-%         n(end+1) = I(x+1,y-1);
-%         
-%     elseif(x==N(1)) % NW
-%         n(end+1) = I(x-1,y-1);
-%         
-%     else % NE and NW
-%         n(end+1) = I(x+1,y-1);
-%         n(end+1) = I(x-1,y-1);
+% for l=1:m
+%     
+%     y=datasample(vec, n, 'Replace', false);
+%     
+%     for k=1:n
+%         sampleVec1(k,1)=data(y(k),1);
+%         sampleVec1(k,2)=data(y(k),2);
 %     end
-%     n(end+1) = I(x,y-1);
-% end
-% 
-% 
-% 
-% % SW, SE
-% if y == N(2)
-%     ;
-% else
-%     if(x==1) % SE
-%         n(end+1) = I(x+1,y+1);
-%         
-%     elseif(x==N(1)) % SW
-%         n(end+1) = I(x-1,y+1);
-%         
-%     else % SE and SW
-%         n(end+1) = I(x+1,y+1);
-%         n(end+1) = I(x-1,y+1);
+%     
+%     p=polyfit(sampleVec1(:,1), sampleVec1(:,2), 1);
+%     
+%     xmin=min(data(:,1));
+%     xmax=max(data(:,1));
+%     
+%     xVal=linspace(xmin, xmax, ny); % range over which to eval poly
+%     
+%     pEval=polyval(p, xVal);
+%     
+%     Y=zeros(ny,2);
+%     Y(:,1)=xVal;
+%     Y(:,2)=pEval;
+%     
+%     consensusSet=rangesearch(data, Y, t);
+%     
+%     A=zeros(n*n, 1); % find a better solution for this (~3% of computation; not a priority)
+%     
+%     for i=1:ny
+%         tmp=consensusSet{i};
+%         for j=1:length(tmp)
+%             A((i-1)*ny+j)=tmp(j);
+%         end
 %     end
-%     n(end+1) = I(x,y+1);
+%     
+% 
+%     C1=unique(A);
+%     C1=C1(C1~=0);
+%     % C1 contains data points within distance t of first polynomial
+%     
+%     % if consensus set is large enough, refit poly
+%     if(length(C1)>q && length(C1)>maxC)
+%         
+%         n2=length(C1);
+%         maxC=n2;
+%         
+%         sampleVec2=zeros(n2,2);
+%         
+%         for k=1:n2
+%             sampleVec2(k,1)=data(C1(k),1);
+%             sampleVec2(k,2)=data(C1(k),2);
+%         end
+%         
+%         bestPoly=polyfit(sampleVec2(:,1), sampleVec2(:,2), 1);
+%     end
 % end
 % 
+% 
+% if(~(maxC>q && length(bestPoly)>1))
+%     disp('**Warning: no good polynomial found**')
+% end
+% 
+% end
+
+%% Backup after 2 stages of optimization
+
+% function bestPoly = ransac(I, n, t, m, q)
+% 
+% % I : binary matrix where 1 corresponds to observation and 0 corresponds to
+% % no observation
+% % n : number of points used to sample first polynomial
+% % t : distance from polynomial which is accepted
+% % m : number of iterations
+% % q : lower limit for number of acceptable points for consensus set
+% % Providing only one argument (I) chooses default values of params.
+% 
+% % Returns bestPoly: the best polynomial found fitted by MATLAB's polyfit,
+% % i.e. it contains the the coefficients for the corresponding polynomial
+% % If no good polynomial is found as message will be disp'ed and 0 is
+% % returned. 
+% 
+% % Suppress warning from polyfit (irrelevant for m large enough)
+% warning('off', 'MATLAB:polyfit:RepeatedPointsOrRescale');
+% 
+% [i,j]=find(I>0);
+% data=[i,j];
+% 
+% % Data is a vector where each row corresponds to one observation (x,y)
+% 
+% % Standard settings
+% if(nargin==1)
+%     n=2; 
+%     t=2; 
+%     m=100; 
+%     q=n; 
+% end
+%     
+% maxC=0; % number of elements in largest consensus set so far
+% ny=length(data); % number of evaluation points for polynomial
+% % should ny really be length(data)???
+% 
+% 
+% bestPoly=0;
+%   
+% vec=1:length(data);
+% sampleVec1=zeros(n,2);
+% 
+% for l=1:m
+%     
+%     y=datasample(vec, n, 'Replace', false);
+%     
+%     for k=1:n
+%         sampleVec1(k,1)=data(y(k),1);
+%         sampleVec1(k,2)=data(y(k),2);
+%     end
+%     
+%     p=polyfit(sampleVec1(:,1), sampleVec1(:,2), 1);
+%     
+%     xmin=min(data(:,1));
+%     xmax=max(data(:,1));
+%     
+%     xVal=linspace(xmin, xmax, ny); % range over which to eval poly
+%     
+%     pEval=polyval(p, xVal);
+%     
+%     Y=zeros(ny,2);
+%     Y(:,1)=xVal;
+%     Y(:,2)=pEval;
+%     
+%     consensusSet=rangesearch(data, Y, t);
+%     
+%     A=zeros(n*n, 1); % find a better solution for this (~3% of computation; not a priority)
+%     
+%     for i=1:ny
+%         tmp=consensusSet{i};
+%         for j=1:length(tmp)
+%             A((i-1)*ny+j)=tmp(j);
+%         end
+%     end
+%     
+%     A=A(A~=0);
+%     C1=unique(A);
+%     %C1=C1(C1~=0);
+%     % C1 contains data points within distance t of first polynomial
+%     
+%     % if consensus set is large enough, refit poly
+%     if(length(C1)>q && length(C1)>maxC)
+%         
+%         n2=length(C1);
+%         maxC=n2;
+%         
+%         sampleVec2=zeros(n2,2);
+%         
+%         for k=1:n2
+%             sampleVec2(k,1)=data(C1(k),1);
+%             sampleVec2(k,2)=data(C1(k),2);
+%         end
+%         
+%         bestPoly=polyfit(sampleVec2(:,1), sampleVec2(:,2), 1);
+%     end
+% end
+% 
+% 
+% if(~(maxC>q && length(bestPoly)>1))
+%     disp('**Warning: no good polynomial found**')
+% end
 % 
 % end
