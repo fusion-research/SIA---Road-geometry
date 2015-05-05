@@ -1,4 +1,7 @@
 %% Simple road
+clc
+clear all
+clf
 
 % Read image of simple road
 I = imread('Bild4.png');
@@ -60,7 +63,6 @@ imshow(I_best)
 title('Best image')
 
 
-
 % Find the contours in the image
 Icontour = findContour(I_best, 2/8, 3/8);
 
@@ -90,9 +92,9 @@ end
 
 %% Try to find lines with RanSaC
 
-n = 15;
+n = 5;
 t = 1;
-m = 25;
+m = 200;
 q = 1;
 
 interations = 10;
