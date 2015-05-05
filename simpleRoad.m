@@ -64,7 +64,7 @@ title('Best image')
 
 
 % Find the contours in the image
-Icontour = findContour(I_best, 2/8, 3/8);
+Icontour = findContour(I_best, 2/8, 4/8);
 
 subplot(2,3,6)
 imshow(Icontour)
@@ -76,7 +76,7 @@ clc
 subplot(1,1,1)
 imshow(Icontour)
 
-nbrSegments = 4;
+nbrSegments = 64;
 
 tic
 Ismall = getSegments(Icontour, nbrSegments);
@@ -91,37 +91,64 @@ end
 
 
 %% Try to find lines with RanSaC
+clc
 
 n = 5;
 t = 1;
-m = 200;
+m = 250;
 q = 1;
 
-interations = 10;
-polySum = zeros(nbrSegments,2);
+interations = 5;
 
+polySum = zeros(nbrSegments,2);
+nbrPoly = zeros(nbrSegments,1);
+
+% Do the RanSaC-algoritm 'iterations' number of times
 for k = 1:interations
+    % For eacch image-segment
     for smallImageNrb = 1:nbrSegments;
         
         bestPoly = ransac(Ismall(:,:,smallImageNrb), n, t, m, q);
         
-        x = 1:size(Ismall,1);
-        y = polyval(bestPoly, x);
-        
-        figure(4)
-        subplot(sqrt(nbrSegments),sqrt(nbrSegments),smallImageNrb)
-        imagesc([1 size(Ismall,1)],[1 size(Ismall,2)],Ismall(:,:,smallImageNrb))
-        hold on
-        plot(y,x,'r')
-        axis([0 size(Ismall,1) 0 size(Ismall,1)])
-        
-        polySum(smallImageNrb,:) = polySum(smallImageNrb,:) + bestPoly;
+        % If a spline is found, plot it on top of the image
+        if size(bestPoly, 2) == 2
+            
+            nbrPoly(smallImageNrb) = nbrPoly(smallImageNrb) + 1;
+            
+            x = 1:size(Ismall,1);
+            y = polyval(bestPoly, x);
+            
+            figure(4)
+            subplot(sqrt(nbrSegments),sqrt(nbrSegments),smallImageNrb)
+            imagesc([1 size(Ismall,1)],[1 size(Ismall,2)],Ismall(:,:,smallImageNrb))
+            hold on
+            plot(y,x,'r')
+            axis([0 size(Ismall,1) 0 size(Ismall,1)])
+            
+            set(gca,'xtick',[],'ytick',[]);
+
+            polySum(smallImageNrb,:) = polySum(smallImageNrb,:) + bestPoly;
+            
+        % If no spline is found, just display the image-segment
+        else
+            
+            figure(4)
+            subplot(sqrt(nbrSegments),sqrt(nbrSegments),smallImageNrb)
+            imshow(Ismall(:,:,smallImageNrb))
+            hold on
+            axis([0 size(Ismall,1) 0 size(Ismall,1)])
+            
+        end
         
     end
 end
 
-polySum = polySum/interations;
-        
+% Find a mean spline for each image-segment
+for smallImageNrb = 1:nbrSegments
+    polySum(smallImageNrb,:) = polySum(smallImageNrb,:)./nbrPoly(smallImageNrb);
+end
+
+% Plot the mean spline for each image-segment
 for smallImageNrb = 1:nbrSegments;
     
     x = 1:size(Ismall,1);
@@ -135,6 +162,11 @@ for smallImageNrb = 1:nbrSegments;
     axis([0 size(Ismall,1) 0 size(Ismall,1)])
     
 end
+
+
+%% Find the true lines in the image
+
+
 
 %% Find white lines
 
