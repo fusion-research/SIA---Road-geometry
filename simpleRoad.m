@@ -4,7 +4,7 @@ clear all
 clf
 
 % Read image of simple road
-I = imread('Bild3.png');
+I = imread('Bild4.png');
 
 % Show original image
 figure(1)
@@ -104,6 +104,7 @@ maxFound
 %%
 
 I=I_best;
+%I = I_ultimate;
 
 % Removed noise from actual road
 InoNoiseRoad=imcomplement(bwareaopen(imcomplement(I),1000));
@@ -113,9 +114,12 @@ InoNoise=bwareaopen(InoNoiseRoad, 1000);
 IroadLines=InoNoise-I_bestLines;
 
 IroadLinesNoNoise=bwareaopen(imcomplement(IroadLines), 100);
+IroadLinesNoNoise=bwareaopen(imcomplement(IroadLinesNoNoise), 5);
 
 figure(5)
-imshow(imcomplement(IroadLinesNoNoise))
+clf
+subplot(1,1,1)
+imshow(IroadLinesNoNoise)
 
 %% Divide the image into smaller segments
 clc
@@ -321,3 +325,28 @@ IV = IV > IV_threshold; % Doesn't give too much info
 
 figure(7)
 imshow(IV);
+
+
+%% Extract dark gray areas
+
+subplot(1,1,1)
+clf
+
+low = 65;
+high = 125;
+
+IR_darkGray = (IR > low/255 & IR < high/255);
+IG_darkGray = (IG > low/255 & IG < high/255);
+IB_darkGray = (IB > low/255 & IB < high/255);
+
+I_darkGray = (IR_darkGray+IG_darkGray+IB_darkGray) > 2;
+
+
+imshow(I_darkGray)
+
+I_ultimate = (I_best + I_darkGray)>=1;
+imshow(I_ultimate)
+
+Itest = bwareaopen(I_ultimate, 700);
+Itest2 = bwareaopen(imcomplement(Itest), 200);
+imshow(Itest2)
