@@ -70,6 +70,53 @@ subplot(2,3,6)
 imshow(Icontour)
 title('Contours')
 
+%%
+
+I=I_best;
+
+[labeledImage, numberOfRegions] = bwlabel(I, 4);
+
+imshow(labeledImage)
+
+
+%%
+
+
+
+maxFound=0;
+tic
+for j=1:length(I)
+
+    V=test3(j,:);
+    S = zeros(size(V));
+    for i=2:length(V)
+        if(V(i-1)==1)
+            S(i) = 1 + S(i-1);
+        end
+    end
+    maxFound=max(maxFound, max(S));
+end
+toc
+
+maxFound
+
+
+%%
+
+I=I_best;
+
+% Removed noise from actual road
+InoNoiseRoad=imcomplement(bwareaopen(imcomplement(I),1000));
+
+InoNoise=bwareaopen(InoNoiseRoad, 1000);
+
+IroadLines=InoNoise-I_bestLines;
+
+IroadLinesNoNoise=bwareaopen(imcomplement(IroadLines), 100);
+
+figure(5)
+imshow(imcomplement(IroadLinesNoNoise))
+
 %% Divide the image into smaller segments
 clc
 
@@ -90,7 +137,7 @@ end
 
 %% Try to find lines with RanSaC
 
-n = 5;
+n = 3;
 t = 1;
 m = 250;
 q = 1;

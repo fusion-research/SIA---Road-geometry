@@ -1,6 +1,6 @@
 %% PROJECT 142 1.0
 
-cd /chalmers/users/sstahl/Desktop/SIA projekt/SIA---Road-geometry
+cd /chalmers/users/sstahl/Desktop/'SIA projekt'/SIA---Road-geometry
 
 %%
 
@@ -142,6 +142,8 @@ figure(12)
 imshow(IB_contours2)
 
 %% road with filling
+
+img=IB_threshold;
 
 test = bwareaopen(img, 10000);
 
@@ -387,63 +389,12 @@ else
 end
 
 
-%% 
-
-data=[1 1
-      2 5
-      3.4 8
-      6 3
-      5 1
-      7 9
-      9 11
-      5.1 2
-      5.2 3
-      5.3 2.5
-      5.4 1.5
-      5.5 1.8];
-  
-%profile on
-tic
-polyFound=ransac(data);
-toc
-%profile viewer
-
-
-
-%warning('off', 'MATLAB:polyfit:RepeatedPointsOrRescale')
-
-
-%% 
-
-I=[1 0 0
-   0 1 0
-   0 0 1];
-
-K=find(I);
-data=zeros(length(K),2);
-for i=1:length(K)
-    [tmp1, tmp2]=ind2sub(size(I), K(i));
-    data(i,1)=tmp1;
-    data(i,2)=tmp2;
-end
-
-data
-
-%%
-
-[i,j]=find(I>0);
-data=[i,j];
-
-%%
-
-
-I=zeros(400, 400);
 
 %% optimization: generate test image with some noise
 
 N=400;
 
-p=1/100;
+p=1/50;
 
 I=binornd(ones(200), p*ones(200));
 
@@ -457,14 +408,36 @@ imshow(I)
 % Changing order of unique and rm of 0's :  0.72
 % Changing the way I is converted into data vec: 0.225
 
-%profile on
+profile on
 tic
-polyFound=ransac(I);
+polyFound1=ransac(I);
 toc
-%profile viewer
+profile viewer
+
+% tic
+% polyFound2=ransacOld(I);
+% toc
 
 
-size(polyFound)
+
+%%
+n=3;
+
+m=5;
+
+% A=[1 0 1;
+%     0 0 0;
+%     0 1 0];
+
+A=eye(m,m);
+%
+
+tic
+B=nlfilter(IB_threshold, [n n], @(b) sum(b(:))-b((n+1)/2,(n+1)/2));
+toc
+
+tic
+Btmp=findEightNeighboursSum(IB);
 
 
 %%
@@ -695,3 +668,88 @@ data % 1,1
 % end
 % 
 % end
+
+
+%%
+
+
+% data; % contains (x,y) coords of data
+%
+% Y=zeros(ny,2);
+% Y(:,1)=xVal;
+% Y(:,2)=pEval;
+% Y contains coords of points on the line
+
+% t is distance within which we accept points
+
+%%
+
+% could we somehow sort data in a special way and utilize this info to do
+% the search "in order"??
+
+%%
+ind=1; % keeps track of where we should write the next entry
+
+res=zeros(length(data), 1);
+
+checkVec=1:length(data); % vector containing the points of interest we haven't
+% confirmed to be within t
+
+for i=1:length(Y)
+    
+    xcord=Y(i,1);
+    ycord=Y(i,2);
+    
+    for j=checkVec
+        
+        d=sqrt((xcord-data(j,1))^2 + (ycord-data(j,2))^2); % distance
+        
+        if(d<t)
+            res(ind)=j; % add index to result
+            ind=ind+1;
+            
+            % throw away j: no need to check it twice. the checkVec which
+            % the j-for-loop has access to is updated in each iteration of
+            % i. 
+            
+            % binary search for element to remove
+            c=1; % index of element to remove
+            b=numel(checkVec);
+            while (c+1<b)
+                lw=(floor((c+b)/2));
+                if (checkVec(lw)<i) % i is the element we're looking for
+                    c=lw;
+                else
+                    b=lw;
+                end
+            end
+            checkVec(c)=[]; % remove it  
+        end      
+    end
+end
+
+
+% cut off the last part of res? contains only zeros. 
+
+res(ind:length(data))=[];
+
+%%
+N=400;
+
+p=1/5;
+
+I=binornd(ones(200), p*ones(200));
+
+imshow(I)
+
+
+%%
+% ransac(I, n, t, m, q)
+
+tic
+p1=ransac(I, 3, 2, 10, 3);
+toc
+
+tic
+p2=ransacMan(I, 3, 2, 10, 3);
+toc
