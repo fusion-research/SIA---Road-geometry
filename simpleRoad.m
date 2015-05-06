@@ -1,7 +1,10 @@
 %% Simple road
+clc
+clear all
+clf
 
 % Read image of simple road
-I = imread('Bild4.png');
+I = imread('Bild3.png');
 
 % Show original image
 figure(1)
@@ -21,8 +24,17 @@ IB_thres = IB > getThreshold(IR, 0.5);
 % Convert I to a hsv-image and threshold the saturated image
 Ihsv = rgb2hsv(I);
 IS = cutImage(Ihsv(:,:,2));
-IS_threshold = getThreshold(IS,0.3)
+IS_threshold = getThreshold(IS,0.3);
 IS = IS < IS_threshold; % Good pic to extract the road from!
+
+IV = cutImage(Ihsv(:,:,3));
+IV_threshold = getThreshold(IV,0.85);
+IV = IV > IV_threshold; % Doesn't give too much info
+
+% Sum all images up to get the best image. Works good for 'Bild2' to reduce
+%the reflections from the water
+% I_best = IB_thres+IR_thres+IG_thres+IS+IV;
+% I_best = I_best > 4;
 
 % Sum all images up to get the best image
 I_best = IB_thres+IR_thres+IG_thres+IS;
@@ -50,18 +62,185 @@ subplot(2,3,5)
 imshow(I_best)
 title('Best image')
 
-%% Find the contours in the image
 
-Icontour = findContour(I_best, 5/8);
+% Find the contours in the image
+Icontour = findContour(I_best, 2/8, 3/8);
 
 subplot(2,3,6)
 imshow(Icontour)
 title('Contours')
 
-%% Find lines and fill the area between the lines
+%%
 
-%% Given the boundaries, fill the image
+I=I_best;
 
+[labeledImage, numberOfRegions] = bwlabel(I, 4);
+
+imshow(labeledImage)
+
+
+%%
+
+
+
+maxFound=0;
+tic
+for j=1:length(I)
+
+    V=test3(j,:);
+    S = zeros(size(V));
+    for i=2:length(V)
+        if(V(i-1)==1)
+            S(i) = 1 + S(i-1);
+        end
+    end
+    maxFound=max(maxFound, max(S));
+end
+toc
+
+maxFound
+
+
+%%
+
+I=I_best;
+
+% Removed noise from actual road
+InoNoiseRoad=imcomplement(bwareaopen(imcomplement(I),1000));
+
+InoNoise=bwareaopen(InoNoiseRoad, 1000);
+
+IroadLines=InoNoise-I_bestLines;
+
+IroadLinesNoNoise=bwareaopen(imcomplement(IroadLines), 100);
+
+figure(5)
+imshow(imcomplement(IroadLinesNoNoise))
+
+%% Divide the image into smaller segments
+clc
+
+subplot(1,1,1)
+imshow(Icontour)
+
+nbrSegments = 4;
+
+Ismall = getSegments(Icontour, nbrSegments);
+
+figure(3)
+clf
+for i = 1:nbrSegments
+    subplot(sqrt(nbrSegments),sqrt(nbrSegments),i)
+    imshow(Ismall(:,:,i))
+end
+
+
+%% Try to find lines with RanSaC
+
+n = 3;
+t = 1;
+m = 250;
+q = 1;
+
+interations = 3;
+
+polySum = zeros(nbrSegments,2);
+nbrPoly = zeros(nbrSegments,1);
+
+tic
+x = 1:size(Ismall,1);
+sqrtSeg = sqrt(nbrSegments);
+
+% Do the RanSaC-algoritm 'iterations' number of times
+for k = 1:interations
+    % For each image-segment
+    for smallImageNrb = 1:nbrSegments;
+        
+        bestPoly = ransac(Ismall(:,:,smallImageNrb), n, t, m, q);
+        
+        % If a spline is found, plot it on top of the image
+        if size(bestPoly, 2) == 2
+            
+            nbrPoly(smallImageNrb) = nbrPoly(smallImageNrb) + 1;
+            
+            y = polyval(bestPoly, x);
+
+            figure(4)
+            subplot(sqrtSeg,sqrtSeg,smallImageNrb)
+            imagesc([1 x(end)],[1 x(end)],Ismall(:,:,smallImageNrb))
+            hold on
+            plot(y,x,'r')
+            axis([0 x(end) 0 x(end)])
+            set(gca,'xtick',[],'ytick',[]);
+            
+            polySum(smallImageNrb,:) = polySum(smallImageNrb,:) + bestPoly;
+            
+        % If no spline is found, just display the image-segment
+        else
+            
+            figure(4)
+            subplot(sqrtSeg,sqrtSeg,smallImageNrb)
+            imshow(Ismall(:,:,smallImageNrb))
+            set(gca,'xtick',[],'ytick',[]);
+            
+        end
+        
+    end
+end
+toc
+
+% Find a mean spline for each image-segment
+for smallImageNrb = 1:nbrSegments
+    polySum(smallImageNrb,:) = polySum(smallImageNrb,:)/nbrPoly(smallImageNrb);
+end
+
+% Plot the mean spline for each image-segment
+for smallImageNrb = 1:nbrSegments;
+    
+    y = polyval(polySum(smallImageNrb,:), x);
+
+    figure(4)
+    subplot(sqrtSeg,sqrtSeg,smallImageNrb)
+    imagesc([1 size(Ismall,1)],[1 size(Ismall,2)],Ismall(:,:,smallImageNrb))
+    hold on
+    plot(y,x,'r')
+    set(gca,'xtick',[],'ytick',[]);
+    
+end
+
+
+%% Find the true lines in the image
+
+IfinalContour = zeros(size(Icontour));
+pointsPerSegment = floor(length(Icontour)/sqrtSeg);
+
+for i = 1:(nbrSegments-sqrtSeg)
+
+    startX = 1+(ceil(i/sqrtSeg)-1)*pointsPerSegment
+    stopX = startX + 2*pointsPerSegment - 1
+    
+    maxY = polyval(polySum(i,:),x(end));
+    minY = polyval(polySum(i+sqrtSeg,:),x(1));
+        
+    if abs(maxY - minY) < 0.5*x(end)
+        
+        majorX = startX:stopX;
+        finalPoly = (polySum(i,:) + polySum(i+sqrtSeg,:))/2;
+        y = round(polyval(finalPoly, majorX)) + abs(1-mod(i,sqrtSeg))*pointsPerSegment;
+        
+        y(find(y == 0)) = 1;
+        y = y(find(y > 0));
+        
+        for i = 1:length(y)
+            IfinalContour(majorX(i), y(i)) = 1;
+        end
+        
+    end
+end
+
+figure(5)
+clf
+imshow(IfinalContour)
 
 %% Find white lines
 
@@ -74,10 +253,8 @@ IB_thres = IB > getThreshold(IR, 0.9);
 I_bestLines = IB_thres+IR_thres+IG_thres+IS;
 I_bestLines = I_bestLines > 3;
 
-imshow(I_bestLines)
-
 % Show blue image
-figure(2)
+figure(5)
 subplot(2,3,1)
 imshow(IR_thres)
 title('Red image')
@@ -104,15 +281,20 @@ IS = cutImage(Ihsv(:,:,2));
 IS_threshold = getThreshold(IS,0.3)
 IS = IS < IS_threshold; % Good pic to extract the road from!
 
+%%
+
+Icontour_lines = findContour(I_bestLines, 4/8, 5/8);
+
+figure(8)
+imshow(Icontour_lines)
+
 %% Fill all holes
 
 tic
-I_filled = fillHoles(I_best, 0.8); 
+I_filled = fillHoles(I_best, 0.8);
 toc
 
-figure(5)
-clf
-
+figure(6)
 subplot(1,2,1)
 imshow(I_best)
 title('Not filled')
@@ -129,12 +311,13 @@ IH = cutImage(Ihsv(:,:,1));
 IS = cutImage(Ihsv(:,:,2));
 IV = cutImage(Ihsv(:,:,3));
 
-IH_threshold = getThreshold(IH,0.7)
+IH_threshold = getThreshold(IH,0.9)
 IS_threshold = getThreshold(IS,0.3)
-IV_threshold = getThreshold(IV,0.8)
+IV_threshold = getThreshold(IV,0.85)
 
 IH = IH < IH_threshold; % Doesn't give too much info
 IS = IS < IS_threshold; % Good pic to extract the road from!
-IV = IV < IV_threshold; % Doesn't give too much info
+IV = IV > IV_threshold; % Doesn't give too much info
 
-imshow(IS);
+figure(7)
+imshow(IV);
