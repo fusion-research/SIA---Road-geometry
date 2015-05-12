@@ -1,22 +1,14 @@
 %% PROJECT 142 1.0
-I=imread('Bild5.png');
+I=imread('Bild3.png');
 rate = size(I,2)/size(I,1);
 
 %% RGB
 Ir=resample(I,rate);
 
-<<<<<<< HEAD
 % creating 3 images for RGB
 IR =Ir(:, 1:length(Ir)/3);
 IG =Ir(:,   length(Ir)/3+1 : 2*length(Ir)/3);
 IB =Ir(:, 2*length(Ir)/3+1 :   length(Ir));
-=======
-
-% creating 3 images f�r RGB
-IR =Ir(:,1:length(Ir)/3);
-IG =Ir(:, length(Ir)/3+1 : 2*length(Ir)/3);
-IB =Ir(:, 2*length(Ir)/3+1 : length(Ir));
->>>>>>> a81d88349eaffe17e581753ecab8195c5f4ff0b4
 
 figure(1); set(figure(1),'position',[1 100 1979 1079])
 subplot(2,3,[1,2,3]);imshow(Ir)
@@ -28,10 +20,10 @@ threshold_IR = midpoint(IR);
 threshold_IG = midpoint(IG);
 threshold_IB = midpoint(IB);
 % creating binary images
-IR_threshold = IR < 0.8;
-IG_threshold = IG < 0.7;
-IB_threshold = IB < 0.8;%threshold_IB;%mean(mean(IB)); %0.6 good for bild1
-%figure(2), imshow(IB_threshold)
+IR_binary = IR < 0.8;
+IG_binary = IG < 0.7;
+IB_binary = IB < 0.8*threshold_IB;%mean(mean(IB)); %0.6 good for bild1
+figure(2), imshow(IB_binary)
 
 %% HSV
 I_HSV = rgb2hsv(I);
@@ -52,10 +44,10 @@ threshold_IH = midpoint(IH);
 threshold_IS = midpoint(IS);
 threshold_IV = midpoint(IV);
 % creating binary images
-IH_threshold = IH < 0.8;
-IS_threshold = IS < threshold_IS;%0.08;
-IV_threshold = IV < 0.8;%threshold_IB;%mean(mean(IB)); %0.6 good for bild1
-%figure(2), imshow(IS_threshold)
+IH_binary = IH < 0.8;
+IS_binary = IS < threshold_IS;%0.08;
+IV_binary = IV < 0.8;%threshold_IB;%mean(mean(IB)); %0.6 good for bild1
+%figure(2), imshow(IS_binary)
 
 %% YCbCr
 I_YUV = rgb2ycbcr(I);
@@ -76,9 +68,9 @@ threshold_IY = midpoint(IY);
 threshold_IU = midpoint(IU);
 threshold_IV = midpoint(IV);
 % creating binary images
-IY_threshold = IY < 0.8;
-IU_threshold = IU < 0.7;
-IV_threshold = IV < 0.8;%threshold_IB;%mean(mean(IB)); %0.6 good for bild1
+IY_binary = IY < 0.8;
+IU_binary = IU < 0.7;
+IV_binary = IV < 0.8;%threshold_IB;%mean(mean(IB)); %0.6 good for bild1
 %figure(2), imshow(IB_threshold)
 
 %% NTSC - YIQ
@@ -100,16 +92,25 @@ threshold_IY = midpoint(IY);
 threshold_II = midpoint(II);
 threshold_IQ = midpoint(IQ);
 % creating binary images
-IY_threshold = IY < 0.8;
-II_threshold = II < 0.7;
-IQ_threshold = IQ < 0.8;%threshold_IB;%mean(mean(IB)); %0.6 good for bild1
-%figure(2), imshow(IB_threshold)
+IY_binary = IY < 0.8;
+II_binary = II < 0.7;
+IQ_binary = IQ < 0.8;%threshold_IB;%mean(mean(IB)); %0.6 good for bild1
+%figure(2), imshow(IB_binary)
+
+
+
+%% Morphology using neighbours
+I_Morph = RemoveNoise(IB_binary, 0.9, 30);
+
+figure(1), set(figure(1),'position',[1 100 1979 1079])
+subplot(1,2,1); imshow(IB_binary)
+subplot(1,2,2); imshow(I_Morph)
 
 
 %% interative analysis
 IB; %= IS;
 R = 1;
-R2 = 1;%7;%10;
+R2 = 7;%10;
 first= 90;
 last = 40;
 SE = strel('diamond', R);
@@ -119,6 +120,7 @@ I = IB < threshold_IB;
 for i=first:-1:last
     
     I = imclose(I,SE);
+    %I = RemoveNoise(I, 0.99, 30);
     
     figure(i)
     imshow(I)
@@ -131,6 +133,7 @@ for i=first:-1:last
     
 end
 I = imclose(I,SE2);
+%I = RemoveNoise(I, 0.99, 30);
 figure(last+1)
 imshow(I)
 figure(last+2)

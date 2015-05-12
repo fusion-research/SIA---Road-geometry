@@ -41,3 +41,24 @@ highest = max(max(IGRAY));
 IGRAY=IGRAY/highest;
 
 imshow(IGRAY)
+
+%%
+area=4;
+I = ones(10);
+ratio=0.5;
+disp(area)
+tic
+N =RemoveNoise2(I,area);
+Inew=zeros(size(I));
+for k = 1+area/2:N(1)-area/2
+    for l = 1+area/2:N(2)-area/2
+        if N(k,l) >ratio
+            Inew = 1;
+        end
+    end
+end
+toc
+
+tic
+Inew2 = RemoveNoise(I, ratio, area);
+toc
