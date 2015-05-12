@@ -4,7 +4,7 @@ clear all
 clf
 
 % Read image of simple road
-I = imread('Bild3.png');
+I = imread('Bild4.png');
 
 % Show original image
 figure(1)
@@ -18,8 +18,8 @@ IB=im2double(cutImage(I(:,:,3)));
 
 % Threshold for the RGB-images
 IR_thres = IR > getThreshold(IR, 0.5);
-IG_thres = IG > getThreshold(IR, 0.5);
-IB_thres = IB > getThreshold(IR, 0.5);
+IG_thres = IG > getThreshold(IG, 0.5);
+IB_thres = IB > getThreshold(IB, 0.5);
 
 % Convert I to a hsv-image and threshold the saturated image
 Ihsv = rgb2hsv(I);
@@ -71,15 +71,6 @@ Icontour = findContour(I_best, 2/8, 3/8);
 subplot(2,3,6)
 imshow(Icontour)
 title('Contours')
-
-%%
-
-I=I_best;
-
-[labeledImage, numberOfRegions] = bwlabel(I, 4);
-
-imshow(labeledImage)
-
 
 %%
 
@@ -289,29 +280,6 @@ title('Saturated image')
 subplot(2,3,5)
 imshow(I_bestLines)
 title('Best image')
-
-
-%%
-
-Icontour_lines = findContour(I_bestLines, 4/8, 5/8);
-
-figure(8)
-imshow(Icontour_lines)
-
-%% Fill all holes
-
-tic
-I_filled = fillHoles(I_best, 0.8);
-toc
-
-figure(6)
-subplot(1,2,1)
-imshow(I_best)
-title('Not filled')
-
-subplot(1,2,2)
-imshow(I_filled)
-title('Filled')
 
 %% RGB to HSV
 

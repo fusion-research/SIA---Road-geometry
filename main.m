@@ -4,7 +4,7 @@ clc
 clear all
 
 % Read image of simple road
-I = imread('Bild5.png');
+I = imread('Bild4.png');
 
 % % Show original image
 figure(1)
@@ -18,8 +18,8 @@ IB=im2double(cutImage(I(:,:,3)));
 
 % Threshold for the RGB-images
 IR_thres = IR > getThreshold(IR, 0.5);
-IG_thres = IG > getThreshold(IR, 0.5);
-IB_thres = IB > getThreshold(IR, 0.5);
+IG_thres = IG > getThreshold(IG, 0.5);
+IB_thres = IB > getThreshold(IB, 0.5);
 
 % Convert I to a hsv-image and threshold the saturated image
 Ihsv = rgb2hsv(I);
@@ -44,8 +44,8 @@ I_best = I_best > 3;
 
 % Threshold for the RGB-images
 IR_thres = IR > getThreshold(IR, 0.9);
-IG_thres = IG > getThreshold(IR, 0.9);
-IB_thres2 = IB > getThreshold(IR, 0.9);
+IG_thres = IG > getThreshold(IG, 0.9);
+IB_thres2 = IB > getThreshold(IB, 0.9);
 
 % Sum all images up to get the best image
 I_bestLines = IB_thres2+IR_thres+IG_thres+IS;

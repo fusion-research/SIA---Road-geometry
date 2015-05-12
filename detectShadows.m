@@ -5,7 +5,7 @@ clear all
 clf
 
 % Read image of simple road
-I = imread('Bild5.png');
+I = imread('Bild4.png');
 
 % Show original image
 figure(1)
@@ -19,8 +19,8 @@ IB=im2double(cutImage(I(:,:,3)));
 
 % Threshold for the RGB-images
 IR_thres = IR > getThreshold(IR, 0.5);
-IG_thres = IG > getThreshold(IR, 0.5);
-IB_thres = IB > getThreshold(IR, 0.5);
+IG_thres = IG > getThreshold(IG, 0.5);
+IB_thres = IB > getThreshold(IB, 0.5);
 
 % Convert I to a hsv-image and threshold the saturated image
 Ihsv = rgb2hsv(I);
@@ -40,8 +40,8 @@ IV = IV > IV_threshold; % Doesn't give too much info
 % Sum all images up to get the best image
 I_best = IB_thres+IR_thres+IG_thres+IS;
 I_best = I_best > 3;
-I_best = bwareaopen(I_best, 200);
-I_best = imcomplement(bwareaopen(imcomplement(I_best), 200));
+I_best = bwareaopen(I_best, 100);
+I_best = bwareaopen(imcomplement(I_best), 300);
 
 % Show images
 figure(2)
@@ -73,7 +73,6 @@ I_darkGray = imcomplement(bwareaopen(imcomplement(I_darkGray), 600));
 I_darkGray = bwareaopen(I_darkGray, 15000);
 
 I_ultimate = (I_best + I_darkGray) >= 1;
-imshow(I_ultimate)
 
 I_ultimate = bwareaopen(I_ultimate, 1000);
 I_ultimate = bwareaopen(imcomplement(I_ultimate), 2000);
@@ -86,9 +85,9 @@ imshow(I_ultimate)
 
 
 % Threshold for the RGB-images
-IR_thres = IR > getThreshold(IR, 0.92);
-IG_thres = IG > getThreshold(IR, 0.92);
-IB_thres = IB > getThreshold(IR, 0.92);
+IR_thres = IR > getThreshold(IR, 0.90);
+IG_thres = IG > getThreshold(IG, 0.90);
+IB_thres = IB > getThreshold(IB, 0.90);
 
 % Convert I to a hsv-image and threshold the saturated image
 Ihsv = rgb2hsv(I);
@@ -107,25 +106,25 @@ imshow(I_bestLines)
 title('Best image')
 
 
-
-
 % ------------ Get ultimate image -------------------------------------
 
 % Removed noise from actual road
-InoNoiseRoad=imcomplement(bwareaopen(imcomplement(I_ultimate),10));
-InoNoise=imcomplement(bwareaopen(InoNoiseRoad, 10));
+InoNoiseRoad=imcomplement(bwareaopen(imcomplement(I_ultimate),100));
+InoNoise=bwareaopen(InoNoiseRoad, 100);
 
 % Subtract the white lines from the road
 IroadLines=InoNoise-I_bestLines;
 
 % Noise reducement
-IroadLinesNoNoise=bwareaopen(imcomplement(IroadLines), 10);
-IroadLinesNoNoise=bwareaopen(imcomplement(IroadLinesNoNoise), 5);
+IroadLinesNoNoise=bwareaopen(imcomplement(IroadLines), 100);
+IroadLinesNoNoise=imcomplement(bwareaopen(imcomplement(IroadLinesNoNoise), 100));
 
 figure(5)
 clf
 imshow(IroadLinesNoNoise)
-
+%%
+IR(find(IroadLinesNoNoise == 1)) = 1;
+imshow(IR)
 
 %% Study of the different gray-histograms
 
