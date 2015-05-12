@@ -5,7 +5,7 @@ clear all
 clf
 
 % Read image of simple road
-I = imread('Bild4.png');
+I = imread('Bild3.png');
 
 % Show original image
 figure(1)

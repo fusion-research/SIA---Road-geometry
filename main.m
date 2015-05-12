@@ -40,6 +40,7 @@ IV = IV > IV_threshold; % Doesn't give too much info
 I_best = IB_thres+IR_thres+IG_thres+IS;
 I_best = I_best > 3;
 
+
 % Find white lines
 
 % Threshold for the RGB-images
@@ -49,8 +50,7 @@ IB_thres2 = IB > getThreshold(IB, 0.9);
 
 % Sum all images up to get the best image
 I_bestLines = IB_thres2+IR_thres+IG_thres+IS;
-I_bestLines = I_bestLines > 3;
-
+I_bestLines = imcomplement(I_bestLines > 3);
 
 % Removed noise from actual road
 InoNoiseRoad=imcomplement(bwareaopen(imcomplement(I_best),100));
