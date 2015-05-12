@@ -4,12 +4,11 @@ clc
 clear all
 
 % Read image of simple road
-I = imread('Bild4.png');
+I = imread('Bild6.png');
 
 % % Show original image
 figure(1)
 imshow(I)
-title('Original image')
 
 % Cut the image
 IR = im2double(cutImage(I(:,:,1)));
@@ -17,9 +16,9 @@ IG = im2double(cutImage(I(:,:,2)));
 IB = im2double(cutImage(I(:,:,3)));
 
 % Threshold for the RGB-images
-IR_thres = IR > getThreshold(IR, 0.40);
-IG_thres = IG > getThreshold(IG, 0.40);
-IB_thres = IB > getThreshold(IB, 0.40);
+IR_thres = IR > getThreshold(IR, 0.50);
+IG_thres = IG > getThreshold(IG, 0.50);
+IB_thres = IB > getThreshold(IB, 0.50);
 
 % Convert I to a hsv-image and threshold the saturated image
 Ihsv = rgb2hsv(I);
@@ -35,7 +34,7 @@ I_best = I_best > 3;
 InoNoiseRoad = imcomplement(bwareaopen(imcomplement(I_best),300));
 InoNoiseR = bwareaopen(InoNoiseRoad, 1000);
 
-% Find white lines
+%----------------Find white lines------------------------------------
 
 % Threshold for the RGB-images. In Bild2, use 98%
 IR_thres = IR > getThreshold(IR, 0.9);
