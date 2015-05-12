@@ -753,3 +753,30 @@ toc
 tic
 p2=ransacMan(I, 3, 2, 10, 3);
 toc
+
+%%
+
+Itmp = imread('Bild1.png');
+
+Itmp = rgb2gray(Itmp);
+%%
+
+Itmp2=imagesc(Itmp,[0 1]); %colormap(gray);
+
+imshow(Itmp2)
+
+%imshow(Itmp)
+%%
+
+i1=rgb2gray(imread('Bild1.png'));
+i2=rgb2gray(imread('Bild2.png'));
+i3=rgb2gray(imread('Bild3.png'));
+i4=rgb2gray(imread('Bild4.png'));
+i5=rgb2gray(imread('Bild5.png'));
+
+
+maxdiff1 = max(max(i1)) - min(min(i1))
+maxdiff2 = max(max(i2)) - min(min(i2))
+maxdiff3 = max(max(i3)) - min(min(i3))
+maxdiff4 = max(max(i4)) - min(min(i4))
+maxdiff5 = max(max(i5)) - min(min(i5))

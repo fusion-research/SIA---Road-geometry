@@ -3,6 +3,8 @@
 clc
 clear all
 
+warning('off', 'images:initSize:adjustingMag')
+
 % Read image of simple road
 I = imread('Bild6.png');
 
@@ -51,6 +53,7 @@ InoNoiseL = bwareaopen(InoNoiseLines, 200);
 
 % Subtract lines from road
 IroadLines = InoNoiseR-InoNoiseL;
+
 
 figure(2)
 subplot(1,1,1)
