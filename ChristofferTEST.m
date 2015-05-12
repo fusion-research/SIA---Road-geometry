@@ -43,7 +43,7 @@ IGRAY=IGRAY/highest;
 imshow(IGRAY)
 
 %%
-area=6;
+area=4;
 I = ones(10);
 ratio=0.5;
 disp(area)

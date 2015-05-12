@@ -1,5 +1,5 @@
 %% PROJECT 142 1.0
-I=imread('Bild3.png');
+I=imread('Bild5.png');
 rate = size(I,2)/size(I,1);
 
 %% RGB
@@ -109,17 +109,18 @@ subplot(1,2,2); imshow(I_Morph)
 
 %% interative analysis
 IB; %= IS;
-%R = 1;
-%R2 = 1;%7;%10;
+R = 2;
+R2 = 7;%10;
 first= 90;
 last = 40;
-%SE = strel('diamond', R);
-%SE2 = strel('diamond', R2);
+SE = strel('diamond', R);
+SE2 = strel('diamond', R2);
 I = IB < threshold_IB;
 %figure(99), imshow(I);
 for i=first:-1:last
     
-    I = RemoveNoise(I, 0.99, 30);
+    I = imclose(I,SE);
+    %I = RemoveNoise(I, 0.99, 30);
     
     figure(i)
     imshow(I)
@@ -131,7 +132,8 @@ for i=first:-1:last
     I = imcomplement(I);
     
 end
-I = RemoveNoise(I, 0.99, 30);
+I = imclose(I,SE2);
+%I = RemoveNoise(I, 0.99, 30);
 figure(last+1)
 imshow(I)
 figure(last+2)

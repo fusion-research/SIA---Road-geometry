@@ -22,7 +22,7 @@ threshold_IB = midpoint(IB);
 % creating binary images
 IR_binary = IR < 0.8;
 IG_binary = IG < 0.7;
-IB_binary = IB < threshold_IB;%mean(mean(IB)); %0.6 good for bild1
+IB_binary = IB < 0.8*threshold_IB;%mean(mean(IB)); %0.6 good for bild1
 figure(2), imshow(IB_binary)
 
 %% HSV
@@ -100,8 +100,8 @@ IQ_binary = IQ < 0.8;%threshold_IB;%mean(mean(IB)); %0.6 good for bild1
 
 
 %% Morphology using neighbours
+I_Morph = RemoveNoise(IB_binary, 0.9, 30);
 
-I_Morph = RemoveNoise(IB_binary, 0.99, 30);
 figure(1), set(figure(1),'position',[1 100 1979 1079])
 subplot(1,2,1); imshow(IB_binary)
 subplot(1,2,2); imshow(I_Morph)
@@ -110,7 +110,7 @@ subplot(1,2,2); imshow(I_Morph)
 %% interative analysis
 IB; %= IS;
 R = 1;
-R2 = 1;%7;%10;
+R2 = 7;%10;
 first= 90;
 last = 40;
 SE = strel('diamond', R);
@@ -120,6 +120,7 @@ I = IB < threshold_IB;
 for i=first:-1:last
     
     I = imclose(I,SE);
+    %I = RemoveNoise(I, 0.99, 30);
     
     figure(i)
     imshow(I)
@@ -132,6 +133,7 @@ for i=first:-1:last
     
 end
 I = imclose(I,SE2);
+%I = RemoveNoise(I, 0.99, 30);
 figure(last+1)
 imshow(I)
 figure(last+2)

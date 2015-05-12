@@ -4,7 +4,7 @@ clear all
 %clf
 
 % Read image of simple road
-I = imread('Bild3.png');
+I = imread('Bild2.png');
 
 % % Show original image
 % figure(1)
@@ -53,7 +53,7 @@ I_bestLines = I_bestLines > 3;
 
 
 % Removed noise from actual road
-InoNoiseRoad=imcomplement(bwareaopen(imcomplement(IB_thres),100));
+InoNoiseRoad=imcomplement(bwareaopen(imcomplement(I_best),100));
 InoNoise=bwareaopen(InoNoiseRoad, 1000);
 IroadLines=InoNoise-I_bestLines;
 IroadLinesNoNoise=imcomplement(bwareaopen(imcomplement(IroadLines), 100));
