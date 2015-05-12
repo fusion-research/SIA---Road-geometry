@@ -1,4 +1,4 @@
-function bestPoly = ransac(I, n, t, m, q, pMin)
+function bestPoly = ransac(I, n, t, m, q, pMin, polyDeg)
 
 % I : binary matrix where 1 corresponds to observation and 0 corresponds to
 % no observation
@@ -42,6 +42,7 @@ if(nargin==1)
     pMin=n;
 elseif(nargin==5)
     pMin=n;
+    polyDeg=1;
 end
     
 maxC=0; % number of elements in largest consensus set so far
@@ -52,6 +53,8 @@ ny=round(length(data)/2);
 % ny could be made smaller to save time; this will affect results tho..
 
 bestPoly=0;
+
+%disp(data)
 
 % If the image doesn't have enough available points, do not run algorithm
 if(length(data) < max(n, pMin))
@@ -141,7 +144,7 @@ for l=1:m
         end
         
         %bestPoly=polyfit(sampleVec2(:,1), sampleVec2(:,2), 1);
-        bestPoly=polyfitAlternative(sampleVec2(:,1), sampleVec2(:,2), 1);
+        bestPoly=polyfitAlternative(sampleVec2(:,1), sampleVec2(:,2), polyDeg);
     end
 end
 
