@@ -32,7 +32,7 @@ IV_threshold = getThreshold(IV,0.85);
 IV = IV > IV_threshold; % Doesn't give too much info
 
 % Sum all images up to get the best image. Works good for 'Bild2' to reduce
-%the reflections from the water
+% the reflections from the water
 % I_best = IB_thres+IR_thres+IG_thres+IS+IV;
 % I_best = I_best > 4;
 
@@ -123,7 +123,7 @@ clc
 subplot(1,1,1)
 imshow(Icontour)
 
-nbrSegments = 4;
+nbrSegments = 16;
 
 Ismall = getSegments(Icontour, nbrSegments);
 
