@@ -142,7 +142,7 @@ imshowpair(BW1,BW2,'montage');
 
 
 
-I4 = imread('Bild4.png');
+I4 = imread('Bild1.png');
 I444 = imread('Bild444.png');
 
 % Cut the image
@@ -182,9 +182,17 @@ imhist(IGnorm444)
 subplot(2,3,6)
 imhist(IBnorm444)
 shg
+%-----
 
-%%
+IRnorm4 = IRnorm4 < 0.225;
+IGnorm4 = IGnorm4 < 0.225;
+IBnorm4 = IGnorm4 > 0.225;
 
+IRnorm444 = IRnorm444 < 0.225;
+IGnorm444 = IGnorm444 < 0.225;
+IBnorm444 = IGnorm444 < 0.225;
+
+figure(9)
 subplot(2,3,1)
 imshow(IRnorm4)
 

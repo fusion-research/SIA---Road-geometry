@@ -72,27 +72,80 @@ subplot(2,3,6)
 imshow(Icontour)
 title('Contours')
 
-%%
+%% Extract dark gray areas
 
+figure(8)
+clf
 
+low = 55;
+high = 125;
 
-maxFound=0;
-tic
-for j=1:length(I)
+h = fspecial('disk', 3);
+IR_h = filter2(h, IR);
+IG_h = filter2(h, IG);
+IB_h = filter2(h, IB);
 
-    V=test3(j,:);
-    S = zeros(size(V));
-    for i=2:length(V)
-        if(V(i-1)==1)
-            S(i) = 1 + S(i-1);
-        end
-    end
-    maxFound=max(maxFound, max(S));
-end
-toc
+IR_darkGray = (IR_h > low/255 & IR_h < high/255);
+IG_darkGray = (IG_h > low/255 & IG_h < high/255);
+IB_darkGray = (IB_h > low/255 & IB_h < high/255);
 
-maxFound
+I_darkGray = (IR_darkGray+IG_darkGray+IB_darkGray) > 2;
 
+subplot(2,2,1)
+imshow(I_darkGray)
+
+subplot(2,2,2)
+I_darkGray = imcomplement(bwareaopen(imcomplement(I_darkGray), 600));
+I_darkGray = bwareaopen(I_darkGray, 15000);
+imshow(I_darkGray)
+
+subplot(2,2,3)
+I_ultimate = (I_best + I_darkGray) >= 1;
+imshow(I_ultimate)
+
+Itest = bwareaopen(I_ultimate, 1000);
+Itest2 = bwareaopen(imcomplement(Itest), 2000);
+subplot(1,1,1)
+imshow(Itest2)
+
+%% Find white lines
+
+% Threshold for the RGB-images
+IR_thres = IR > getThreshold(IR, 0.92);
+IG_thres = IG > getThreshold(IR, 0.92);
+IB_thres = IB > getThreshold(IR, 0.92);
+
+% Convert I to a hsv-image and threshold the saturated image
+Ihsv = rgb2hsv(I);
+IS = cutImage(Ihsv(:,:,2));
+IS_threshold = getThreshold(IS,0.1)
+IS = IS < IS_threshold; % Good pic to extract the road from!
+
+% Sum all images up to get the best image
+I_bestLines = IB_thres+IR_thres+IG_thres+IS;
+I_bestLines = I_bestLines > 3;
+
+% Show blue image
+figure(5)
+subplot(2,3,1)
+imshow(IR_thres)
+title('Red image')
+
+subplot(2,3,2)
+imshow(IG_thres)
+title('Green image')
+
+subplot(2,3,3)
+imshow(IB_thres)
+title('Blue image')
+
+subplot(2,3,4)
+imshow(IS)
+title('Saturated image')
+
+subplot(2,3,5)
+imshow(I_bestLines)
+title('Best image')
 
 %%
 
@@ -242,45 +295,6 @@ figure(5)
 clf
 imshow(IfinalContour)
 
-%% Find white lines
-
-% Threshold for the RGB-images
-IR_thres = IR > getThreshold(IR, 0.92);
-IG_thres = IG > getThreshold(IR, 0.92);
-IB_thres = IB > getThreshold(IR, 0.92);
-
-% Convert I to a hsv-image and threshold the saturated image
-Ihsv = rgb2hsv(I);
-IS = cutImage(Ihsv(:,:,2));
-IS_threshold = getThreshold(IS,0.1)
-IS = IS < IS_threshold; % Good pic to extract the road from!
-
-% Sum all images up to get the best image
-I_bestLines = IB_thres+IR_thres+IG_thres+IS;
-I_bestLines = I_bestLines > 3;
-
-% Show blue image
-figure(5)
-subplot(2,3,1)
-imshow(IR_thres)
-title('Red image')
-
-subplot(2,3,2)
-imshow(IG_thres)
-title('Green image')
-
-subplot(2,3,3)
-imshow(IB_thres)
-title('Blue image')
-
-subplot(2,3,4)
-imshow(IS)
-title('Saturated image')
-
-subplot(2,3,5)
-imshow(I_bestLines)
-title('Best image')
-
 %% RGB to HSV
 
 Ihsv = rgb2hsv(I);
@@ -300,39 +314,3 @@ IV = IV > IV_threshold; % Doesn't give too much info
 figure(7)
 imshow(IV);
 
-
-%% Extract dark gray areas
-
-figure(8)
-clf
-
-low = 55;
-high = 125;
-
-h = fspecial('disk', 3);
-IR_h = filter2(h, IR);
-IG_h = filter2(h, IG);
-IB_h = filter2(h, IB);
-
-IR_darkGray = (IR_h > low/255 & IR_h < high/255);
-IG_darkGray = (IG_h > low/255 & IG_h < high/255);
-IB_darkGray = (IB_h > low/255 & IB_h < high/255);
-
-I_darkGray = (IR_darkGray+IG_darkGray+IB_darkGray) > 2;
-
-subplot(2,2,1)
-imshow(I_darkGray)
-
-subplot(2,2,2)
-I_darkGray = imcomplement(bwareaopen(imcomplement(I_darkGray), 600));
-I_darkGray = bwareaopen(I_darkGray, 15000);
-imshow(I_darkGray)
-
-subplot(2,2,3)
-I_ultimate = (I_best + I_darkGray) >= 1;
-imshow(I_ultimate)
-
-Itest = bwareaopen(I_ultimate, 1000);
-Itest2 = bwareaopen(imcomplement(Itest), 2000);
-subplot(1,1,1)
-imshow(Itest2)
