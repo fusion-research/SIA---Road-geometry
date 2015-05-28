@@ -18,9 +18,9 @@ IG = im2double(cutImage(I(:,:,2)));
 IB = im2double(cutImage(I(:,:,3)));
 
 % Threshold for the RGB-images
-IR_thres = IR > getThreshold(IR, 0.5); % 444: 0.25
-IG_thres = IG > getThreshold(IG, 0.5); % 444: 0.25
-IB_thres = IB > getThreshold(IB, 0.5); % 444: 0.25
+IR_thres = IR > getThreshold(IR, 0.5); % Bild444: 0.25
+IG_thres = IG > getThreshold(IG, 0.5); % Bild444: 0.25
+IB_thres = IB > getThreshold(IB, 0.5); % Bild444: 0.25
 
 % Convert I to a hsv-image and threshold the saturated image
 Ihsv = rgb2hsv(I);
@@ -100,6 +100,8 @@ maxAreaPercent=0.025;
 % value close to 1
 lineEccentricityLimit=0.98; 
 
+areaImg=size(preparedImage,1)*size(preparedImage, 2);
+
 % Area limit for a dashed line. Lines with area larger than this is
 % considered to be a solid line segment
 dashedAreaLimit=3e-4*areaImg;
@@ -109,31 +111,29 @@ preparedImage=bwareaopen(imcomplement(preparedImage), 170);
 
 ccPrep=bwconncomp(preparedImage);
 
-areaImg=size(preparedImage,1)*size(preparedImage, 2);
-
 numPixels=cellfun(@numel,ccPrep.PixelIdxList);
 numObjects=ccPrep.NumObjects;
 
 % Only keep objs which are sufficiently small 
 objsKept=numPixels<maxAreaPercent*areaImg; 
 
-testObjs=preparedImage;
+objs=preparedImage;
 
 for i=1:numObjects
 
     if(objsKept(i)==0)
-        testObjs(ccPrep.PixelIdxList{i})=0;
+        objs(ccPrep.PixelIdxList{i})=0;
     end
 end
 
-cctestObjs=bwconncomp(testObjs);
+cctestObjs=bwconncomp(objs);
 
 %----------------Find dashed lines------------------------------------
 
-statObj=regionprops(testObjs, 'all');
+statObj=regionprops(objs, 'all');
 numObjects=cctestObjs.NumObjects;
 
-objDashedLines=testObjs;
+objDashedLines=objs;
 
 for i=1:numObjects
 
@@ -149,10 +149,10 @@ matToTxt(objDashedLines, 'DashedLines')
 
 %----------------Find solid lines------------------------------------
 
-statObj=regionprops(testObjs, 'all');
+statObj=regionprops(objs, 'all');
 numObjects=cctestObjs.NumObjects;
 
-objSolidLines=testObjs;
+objSolidLines=objs;
 
 for i=1:numObjects
 
@@ -167,7 +167,7 @@ end
 matToTxt(objSolidLines, 'SolidLines')
 
 % Find unidentified objects
-unidentifiedObjs=testObjs-objSolidLines-objDashedLines;
+unidentifiedObjs=objs-objSolidLines-objDashedLines;
 
 unidentifiedObjs=unidentifiedObjs>0;
 matToTxt(unidentifiedObjs, 'UnidentifiedObjects')
