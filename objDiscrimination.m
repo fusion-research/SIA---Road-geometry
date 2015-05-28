@@ -87,7 +87,6 @@ imshow(imcomplement(test3))
 % This method thus works best if the area of the images is more or less
 % constant
 
-
 testPrep=test3; % The prepared img which we want to use for obj detection
 
 cctestPrep=bwconncomp(testPrep);
@@ -101,7 +100,7 @@ areaImg=size(testPrep,1)*size(testPrep, 2);
 maxAreaPercent=0.025; 
 
 numPixels=cellfun(@numel,cctestPrep.PixelIdxList);
-numObjects=cc.NumObjects;
+numObjects=cctestPrep.NumObjects;
 
 objsKept=numPixels<maxAreaPercent*areaImg; % Only keep objs which are sufficiently small 
 
@@ -123,7 +122,7 @@ imshow(testObjs)
 % Remove objects if length/width if too small and/or if their area is too large
 % (mainly eliminates solid lines which have the right eccentricity)
 
-lineEccentricityLimit=0.986;
+lineEccentricityLimit=0.99; % 0.986
 dashedAreaLimit=3e-4*areaImg;
 statstestObj=regionprops(testObjs, 'all');
 numObjects=cctestObjs.NumObjects;
@@ -138,17 +137,17 @@ for i=1:numObjects
         objDashedLines(cctestObjs.PixelIdxList{i})=0;
     end
     
-    % if obj has right density?
 end
 
 imshow(objDashedLines)
+matToTxt(objDashedLines, 'DashedLines')
 
 %% Find solid lines
 
 % Remove objects if length/width if too small and/or if their area is too large
 % (mainly eliminates solid lines which have the right eccentricity)
 
-lineEccentricityLimit=0.986;
+lineEccentricityLimit=0.99;
 dashedAreaLimit=3e-4*areaImg;
 statstestObj=regionprops(testObjs, 'all');
 numObjects=cctestObjs.NumObjects;
@@ -163,10 +162,20 @@ for i=1:numObjects
         objSolidLines(cctestObjs.PixelIdxList{i})=0;
     end
     
-    % if obj has right density?
 end
 
 imshow(objSolidLines)
+matToTxt(objSolidLines, 'SolidLines')
+
+%% Find unidentified objects
+
+unidentifiedObjs=testObjs-objSolidLines-objDashedLines;
+
+unidentifiedObjs=unidentifiedObjs>0;
+
+figure(9)
+imshow(unidentifiedObjs)
+matToTxt(unidentifiedObjs, 'UnidentifiedObjects')
 
 %% Look at individual objects
 
