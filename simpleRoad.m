@@ -4,7 +4,7 @@ clear all
 clf
 
 % Read image of simple road
-I = imread('Bild4.png');
+I = imread('Bild444.png');
 
 % Show original image
 figure(1)
@@ -32,7 +32,7 @@ IV_threshold = getThreshold(IV,0.85);
 IV = IV > IV_threshold; % Doesn't give too much info
 
 % Sum all images up to get the best image. Works good for 'Bild2' to reduce
-%the reflections from the water
+% the reflections from the water
 % I_best = IB_thres+IR_thres+IG_thres+IS+IV;
 % I_best = I_best > 4;
 
@@ -72,27 +72,80 @@ subplot(2,3,6)
 imshow(Icontour)
 title('Contours')
 
-%%
+%% Extract dark grey areas
 
+figure(8)
+clf
 
+low = 55;
+high = 125;
 
-maxFound=0;
-tic
-for j=1:length(I)
+h = fspecial('disk', 3);
+IR_h = filter2(h, IR);
+IG_h = filter2(h, IG);
+IB_h = filter2(h, IB);
 
-    V=test3(j,:);
-    S = zeros(size(V));
-    for i=2:length(V)
-        if(V(i-1)==1)
-            S(i) = 1 + S(i-1);
-        end
-    end
-    maxFound=max(maxFound, max(S));
-end
-toc
+IR_darkGray = (IR_h > low/255 & IR_h < high/255);
+IG_darkGray = (IG_h > low/255 & IG_h < high/255);
+IB_darkGray = (IB_h > low/255 & IB_h < high/255);
 
-maxFound
+I_darkGray = (IR_darkGray+IG_darkGray+IB_darkGray) > 2;
 
+subplot(2,2,1)
+imshow(I_darkGray)
+
+subplot(2,2,2)
+I_darkGray = imcomplement(bwareaopen(imcomplement(I_darkGray), 600));
+I_darkGray = bwareaopen(I_darkGray, 15000);
+imshow(I_darkGray)
+
+subplot(2,2,3)
+I_ultimate = (I_best + I_darkGray) >= 1;
+imshow(I_ultimate)
+
+Itest = bwareaopen(I_ultimate, 1000);
+Itest2 = bwareaopen(imcomplement(Itest), 2000);
+subplot(1,1,1)
+imshow(Itest2)
+
+%% Find white lines
+
+% Threshold for the RGB-images
+IR_thres = IR > getThreshold(IR, 0.92);
+IG_thres = IG > getThreshold(IR, 0.92);
+IB_thres = IB > getThreshold(IR, 0.92);
+
+% Convert I to a hsv-image and threshold the saturated image
+Ihsv = rgb2hsv(I);
+IS = cutImage(Ihsv(:,:,2));
+IS_threshold = getThreshold(IS,0.1)
+IS = IS < IS_threshold; % Good pic to extract the road from!
+
+% Sum all images up to get the best image
+I_bestLines = IB_thres+IR_thres+IG_thres+IS;
+I_bestLines = I_bestLines > 3;
+
+% Show blue image
+figure(5)
+subplot(2,3,1)
+imshow(IR_thres)
+title('Red image')
+
+subplot(2,3,2)
+imshow(IG_thres)
+title('Green image')
+
+subplot(2,3,3)
+imshow(IB_thres)
+title('Blue image')
+
+subplot(2,3,4)
+imshow(IS)
+title('Saturated image')
+
+subplot(2,3,5)
+imshow(I_bestLines)
+title('Best image')
 
 %%
 
@@ -123,7 +176,7 @@ clc
 subplot(1,1,1)
 imshow(Icontour)
 
-nbrSegments = 4;
+nbrSegments = 16;
 
 Ismall = getSegments(Icontour, nbrSegments);
 
@@ -242,45 +295,6 @@ figure(5)
 clf
 imshow(IfinalContour)
 
-%% Find white lines
-
-% Threshold for the RGB-images
-IR_thres = IR > getThreshold(IR, 0.92);
-IG_thres = IG > getThreshold(IR, 0.92);
-IB_thres = IB > getThreshold(IR, 0.92);
-
-% Convert I to a hsv-image and threshold the saturated image
-Ihsv = rgb2hsv(I);
-IS = cutImage(Ihsv(:,:,2));
-IS_threshold = getThreshold(IS,0.1)
-IS = IS < IS_threshold; % Good pic to extract the road from!
-
-% Sum all images up to get the best image
-I_bestLines = IB_thres+IR_thres+IG_thres+IS;
-I_bestLines = I_bestLines > 3;
-
-% Show blue image
-figure(5)
-subplot(2,3,1)
-imshow(IR_thres)
-title('Red image')
-
-subplot(2,3,2)
-imshow(IG_thres)
-title('Green image')
-
-subplot(2,3,3)
-imshow(IB_thres)
-title('Blue image')
-
-subplot(2,3,4)
-imshow(IS)
-title('Saturated image')
-
-subplot(2,3,5)
-imshow(I_bestLines)
-title('Best image')
-
 %% RGB to HSV
 
 Ihsv = rgb2hsv(I);
@@ -301,38 +315,79 @@ figure(7)
 imshow(IV);
 
 
-%% Extract dark gray areas
+%% Edge detection using a Prewitt filter. Only apply it on the already detected road
+
+I = cutImage(I);
+
+% Put everything in I to 0 except the road
+I(InoNoiseR == 0) = 0;
+
+% Apply a circular averaging filter
+h = fspecial('disk', 2);
+Ih = filter2(h, I);
+
+% Do the edge detection using a Prewitt filter
+BW1 = edge(Ih,'Prewitt');
+
+subplot(1,1,1)
+imshow(BW1);
+
+%%
 
 figure(8)
-clf
 
-low = 55;
-high = 125;
+IRnorm = IR./(IR+IG+IB+1);
+IGnorm = IG./(IR+IG+IB+1);
+IBnorm = IB./(IR+IG+IB+1);
 
-h = fspecial('disk', 3);
-IR_h = filter2(h, IR);
-IG_h = filter2(h, IG);
-IB_h = filter2(h, IB);
+subplot(1,3,1)
+imshowpair(IR, IRnorm,'montage');
 
-IR_darkGray = (IR_h > low/255 & IR_h < high/255);
-IG_darkGray = (IG_h > low/255 & IG_h < high/255);
-IB_darkGray = (IB_h > low/255 & IB_h < high/255);
+subplot(1,3,2)
+imshowpair(IG, IGnorm,'montage');
 
-I_darkGray = (IR_darkGray+IG_darkGray+IB_darkGray) > 2;
+subplot(1,3,3)
+imshowpair(IB, IBnorm,'montage');
 
-subplot(2,2,1)
-imshow(I_darkGray)
+%h = fspecial('disk',5);
+%IGnorm = imfilter(IGnorm, h);
+BW1 = edge(IGnorm,'Prewitt');
+BW2 = edge(IGnorm,'Canny');
 
-subplot(2,2,2)
-I_darkGray = imcomplement(bwareaopen(imcomplement(I_darkGray), 600));
-I_darkGray = bwareaopen(I_darkGray, 15000);
-imshow(I_darkGray)
+figure(10)
+imshowpair(BW1,BW2,'montage');
 
-subplot(2,2,3)
-I_ultimate = (I_best + I_darkGray) >= 1;
-imshow(I_ultimate)
+%%  Try to displace some color-component
 
-Itest = bwareaopen(I_ultimate, 1000);
-Itest2 = bwareaopen(imcomplement(Itest), 2000);
+InewB1 = zeros(size(IBnorm));
+InewB2 = zeros(size(IBnorm));
+
+displacement = 1;
+
+for i = 1:size(IBnorm,1)-displacement
+    for j = 1:size(IBnorm,1)-displacement
+        InewB1(i+displacement, j+displacement) = IBnorm(i, j);
+    end
+end
+
+for i = 1:size(IBnorm,1)-displacement
+    for j = 1:size(IBnorm,1)-displacement
+        %InewB2(i, j) = IBnorm(i+displacement, j+displacement);
+    end
+end
+
+Icool = (IBnorm+InewB1+InewB2)/3;
+
+figure(9)
 subplot(1,1,1)
-imshow(Itest2)
+imshowpair(IBnorm, InewB1, 'montage')
+imshowpair(IBnorm, Icool, 'montage')
+shg
+
+
+BW1 = edge(Icool,'Prewitt');
+BW2 = edge(Icool,'Canny');
+
+figure(10)
+subplot(1,1,1)
+imshowpair(BW1,BW2,'montage');
