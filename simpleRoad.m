@@ -4,7 +4,7 @@ clear all
 clf
 
 % Read image of simple road
-I = imread('Bild4.png');
+I = imread('Bild444.png');
 
 % Show original image
 figure(1)
@@ -72,7 +72,7 @@ subplot(2,3,6)
 imshow(Icontour)
 title('Contours')
 
-%% Extract dark gray areas
+%% Extract dark grey areas
 
 figure(8)
 clf
@@ -314,3 +314,80 @@ IV = IV > IV_threshold; % Doesn't give too much info
 figure(7)
 imshow(IV);
 
+
+%% Edge detection using a Prewitt filter. Only apply it on the already detected road
+
+I = cutImage(I);
+
+% Put everything in I to 0 except the road
+I(InoNoiseR == 0) = 0;
+
+% Apply a circular averaging filter
+h = fspecial('disk', 2);
+Ih = filter2(h, I);
+
+% Do the edge detection using a Prewitt filter
+BW1 = edge(Ih,'Prewitt');
+
+subplot(1,1,1)
+imshow(BW1);
+
+%%
+
+figure(8)
+
+IRnorm = IR./(IR+IG+IB+1);
+IGnorm = IG./(IR+IG+IB+1);
+IBnorm = IB./(IR+IG+IB+1);
+
+subplot(1,3,1)
+imshowpair(IR, IRnorm,'montage');
+
+subplot(1,3,2)
+imshowpair(IG, IGnorm,'montage');
+
+subplot(1,3,3)
+imshowpair(IB, IBnorm,'montage');
+
+%h = fspecial('disk',5);
+%IGnorm = imfilter(IGnorm, h);
+BW1 = edge(IGnorm,'Prewitt');
+BW2 = edge(IGnorm,'Canny');
+
+figure(10)
+imshowpair(BW1,BW2,'montage');
+
+%%  Try to displace some color-component
+
+InewB1 = zeros(size(IBnorm));
+InewB2 = zeros(size(IBnorm));
+
+displacement = 1;
+
+for i = 1:size(IBnorm,1)-displacement
+    for j = 1:size(IBnorm,1)-displacement
+        InewB1(i+displacement, j+displacement) = IBnorm(i, j);
+    end
+end
+
+for i = 1:size(IBnorm,1)-displacement
+    for j = 1:size(IBnorm,1)-displacement
+        %InewB2(i, j) = IBnorm(i+displacement, j+displacement);
+    end
+end
+
+Icool = (IBnorm+InewB1+InewB2)/3;
+
+figure(9)
+subplot(1,1,1)
+imshowpair(IBnorm, InewB1, 'montage')
+imshowpair(IBnorm, Icool, 'montage')
+shg
+
+
+BW1 = edge(Icool,'Prewitt');
+BW2 = edge(Icool,'Canny');
+
+figure(10)
+subplot(1,1,1)
+imshowpair(BW1,BW2,'montage');
